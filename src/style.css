@@ -1,0 +1,19 @@
+@import "@/style/index.scss";
+
+/* 清除浏览器默认样式，并设置整个应用的基础布局*/
+* {
+    padding: 0;
+    margin: 0;
+}
+
+html,
+body,
+#app {
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+html {
+    font-size: 14px;
+}
