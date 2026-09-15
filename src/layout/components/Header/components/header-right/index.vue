@@ -2,17 +2,24 @@
 import {useRouter} from "vue-router";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {
-    Sunny, Moon, FullScreen, Aim, Setting, Brush, ArrowDown, SwitchButton, User, Lock,
+    Sunny, Moon, FullScreen, Aim, Setting, ArrowDown, SwitchButton, User, Lock,
 } from "@element-plus/icons-vue";
 import {useSettingsStoreHook} from "@/store/modules/settings.ts";
 import {useUserStoreHook} from "@/store/modules/user.ts";
 import Notice from "../Notice/index.vue";
+import SystemSettings from "../system-settings/index.vue";
 import {useI18n} from "vue-i18n";
 
 const settingsStore = useSettingsStoreHook();
 const userStore = useUserStoreHook();
 const router = useRouter();
 const {t, locale} = useI18n();
+
+// 系统设置抽屉引用
+const systemSettingsRef = ref();
+const openSystemSettings = () => {
+    systemSettingsRef.value?.open();
+};
 
 /* ---------- 全屏 ---------- */
 const isFullscreen = ref(false);
@@ -116,15 +123,9 @@ const handleCommand = async (cmd: string) => {
     </div>
 
     <!-- 系统设置 -->
-    <div class="action-item">
+    <div class="action-item" @click="openSystemSettings">
       <el-icon :size="18"><Setting/></el-icon>
       <el-tooltip :content="$t('system.system-settings')" placement="bottom"/>
-    </div>
-
-    <!-- 主题设置（换肤） -->
-    <div class="action-item">
-      <el-icon :size="18"><Brush/></el-icon>
-      <el-tooltip :content="$t('system.theme-settings')" placement="bottom"/>
     </div>
 
     <!-- 用户下拉 -->
@@ -151,6 +152,9 @@ const handleCommand = async (cmd: string) => {
       </template>
     </el-dropdown>
   </div>
+
+  <!-- 系统设置抽屉 -->
+  <SystemSettings ref="systemSettingsRef"/>
 </template>
 
 <style scoped lang="scss">
@@ -159,14 +163,15 @@ const handleCommand = async (cmd: string) => {
   align-items: center;
   height: 100%;
   padding-right: 8px;
+  gap: 16px;
 
   .action-item {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 100%;
+    width: 22px;
+    height: 22px;
     cursor: pointer;
     color: var(--el-text-color-primary);
     transition: background-color 0.2s;

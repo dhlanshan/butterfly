@@ -1,7 +1,7 @@
 @use "@/style/model";
 
 body {
-  background-color: rgb(241, 242, 246);
+    background-color: var(--el-bg-color-page);
 }
 
 .fl {

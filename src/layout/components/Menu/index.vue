@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import MenuItem from './menu-item.vue'
+import {useSettingsStoreHook} from "@/store/modules/settings.ts";
 
 interface Props {
   routeTree: Menu.MenuOptions[];
   collapse?: boolean;
 }
 
+const settingsStore = useSettingsStoreHook();
 const props = withDefaults(defineProps<Props>(), {
   routeTree: () => [],
   collapse: false
@@ -18,6 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
       :default-active="$route.path"
       :collapse="props.collapse"
       :collapse-transition="false"
+      :unique-opened="settingsStore.menuAccordion"
   >
     <MenuItem :route-tree="props.routeTree" />
   </el-menu>

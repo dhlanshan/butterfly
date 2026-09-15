@@ -17,17 +17,35 @@ const breadcrumbs = computed(() => {
 </script>
 
 <template>
-  <div class="header-left">
-    <!-- 折叠按钮（始终展示） -->
-    <div class="collapse-trigger" @click="settingsStore.toggleCollapse">
+  <!--
+    is-flex-fill：让左侧撑满，把右侧操作区推到最右。
+    - side 模式：始终撑满（无横向菜单）。
+    - 移动端：所有模式都无横向菜单，撑满。
+    - top / mix 桌面端：有横向菜单（flex:1）撑满，此处不撑满。
+  -->
+  <div
+      class="header-left"
+      :class="{ 'is-flex-fill': settingsStore.menuLayout === 'side' || settingsStore.isMobile }"
+  >
+    <!--
+      折叠按钮：
+      - side / mix 桌面端：有侧边栏，展示按钮控制折叠。
+      - top 桌面端：无侧边栏，隐藏。
+      - 移动端：所有模式都展示（用于打开抽屉式菜单，与 side 模式一致）。
+    -->
+    <div
+        v-if="settingsStore.menuLayout !== 'top' || settingsStore.isMobile"
+        class="collapse-trigger"
+        @click="settingsStore.toggleCollapse"
+    >
       <el-icon :size="20">
         <Expand v-if="settingsStore.collapsed"/>
         <Fold v-else/>
       </el-icon>
     </div>
-    <!-- 面包屑（移动端隐藏） -->
+    <!-- 面包屑：移动端隐藏 / 设置中关闭 / 顶部或混合菜单模式下不展示（菜单已在顶部体现层级） -->
     <el-breadcrumb
-        v-show="!settingsStore.isMobile"
+        v-show="!settingsStore.isMobile && settingsStore.showBreadcrumb && settingsStore.menuLayout === 'side'"
         class="breadcrumb"
         separator="/"
     >
@@ -48,8 +66,13 @@ const breadcrumbs = computed(() => {
   display: flex;
   align-items: center;
   height: 100%;
-  flex: 1;
+  /* 默认按内容宽度，避免挤压横向菜单；side 模式下撑满把右侧推到最右 */
+  flex: 0 0 auto;
   overflow: hidden;
+
+  &.is-flex-fill {
+    flex: 1;
+  }
 
   .collapse-trigger {
     display: flex;

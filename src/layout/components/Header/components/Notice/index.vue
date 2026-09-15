@@ -64,8 +64,8 @@ const filtered = computed(() =>
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 100%;
+  width: 22px;
+  height: 22px;
   cursor: pointer;
   transition: background-color 0.2s;
 

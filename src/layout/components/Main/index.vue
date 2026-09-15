@@ -13,6 +13,6 @@
   flex: 1;
   height: 0;
   overflow: auto;
-  background-color: rgb(241, 242, 246);
+  background-color: var(--el-bg-color-page);
 }
 </style>
