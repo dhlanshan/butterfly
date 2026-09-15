@@ -1,7 +1,87 @@
 @use "@/style/model";
 
 body {
-    background-color: var(--el-bg-color-page);
+  background-color: var(--el-bg-color-page);
+  /* 若依同款系统无衬线字体栈（苹方 / 微软雅黑），无需引入字体文件 */
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
+               "Microsoft YaHei", "Arial", sans-serif;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                         主题：色弱 / 灰色模式（html class）                  */
+/* -------------------------------------------------------------------------- */
+
+/* 色弱模式：提高对比度并轻微反转色相，辅助色觉障碍用户辨识 */
+html.color-weak {
+    filter: contrast(1.2) saturate(1.4);
+}
+
+/* 灰色模式：页面整体灰度化 */
+html.grey-mode {
+    filter: grayscale(1);
+}
+
+/* 色弱与灰色模式叠加时合并滤镜 */
+html.color-weak.grey-mode {
+    filter: grayscale(1) contrast(1.2);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                         页面过渡动画（pageTransition）                      */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * 页面过渡动画：使用 CSS animation + both 填充模式（与示例项目一致）。
+ * 相比 transition，animation 的 both 模式会保留终态（opacity:1），
+ * 在 mode="out-in" 下被快速切换中断时也不会卡在 opacity:0 导致页面空白。
+ */
+
+/* 轻过渡：左滑淡入 / 右滑淡出 */
+.page-trans-light-enter-active {
+  animation: pt-slide-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.page-trans-light-leave-active {
+  animation: pt-slide-out 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+@keyframes pt-slide-in {
+  0% { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes pt-slide-out {
+  0% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(20px); }
+}
+
+/* 卡片：顶部翻转 */
+.page-trans-card-enter-active {
+  animation: pt-card-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+.page-trans-card-leave-active {
+  animation: pt-card-out 0.25s cubic-bezier(0.6, -0.28, 0.735, 0.045) both;
+}
+@keyframes pt-card-in {
+  0% { opacity: 0; transform: rotateX(-100deg); transform-origin: top; }
+  100% { opacity: 1; transform: rotateX(0deg); transform-origin: top; }
+}
+@keyframes pt-card-out {
+  0% { opacity: 1; transform: rotateX(0deg); transform-origin: top; }
+  100% { opacity: 0; transform: rotateX(-100deg); transform-origin: top; }
+}
+
+/* 渐退：纯淡入淡出 */
+.page-trans-fade-enter-active {
+  animation: pt-fade-in 0.25s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+}
+.page-trans-fade-leave-active {
+  animation: pt-fade-out 0.25s ease-out both;
+}
+@keyframes pt-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes pt-fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .fl {
@@ -28,4 +108,20 @@ body {
 }
 .mr {
   margin-right: 20px;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                标签操作下拉：图标与文字间距（dropdown teleport 到 body）      */
+/* -------------------------------------------------------------------------- */
+.el-dropdown-menu .el-dropdown-item .el-icon {
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                内容区全屏：隐藏侧边栏 / Header，保留标签栏，主内容铺满剩余空间 */
+/* -------------------------------------------------------------------------- */
+html.content-fullscreen .aside-wrap,
+html.content-fullscreen .el-header {
+  display: none !important;
 }

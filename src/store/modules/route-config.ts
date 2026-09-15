@@ -27,7 +27,6 @@ export const useRouteConfigStore = defineStore("routeConfig", () => {
         // 3、将模块设置为真实模块
         let realTree = await moduleReplacement(flatRoute);
         // 4、动态添加路由
-        console.log("realTree", realTree)
         realTree.forEach((route: any) => {
             if (route.meta.isFull) {
                 router.addRoute(route);

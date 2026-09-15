@@ -69,14 +69,16 @@ watch(() => route.path, () => {
         'is-collapsed': !settingsStore.isMobile && settingsStore.collapsed,
         'is-hidden': settingsStore.isMobile && settingsStore.collapsed,
         'is-drawer': settingsStore.isMobile && !settingsStore.collapsed,
+        'is-dark': settingsStore.sidebarDark,
       }"
   >
     <div class="aside">
-      <Logo/>
+      <Logo :class="{ dark: settingsStore.sidebarDark }"/>
       <div class="layout_side">
         <Menu
             :route-tree="menuTree"
             :collapse="settingsStore.collapsed && !settingsStore.isMobile"
+            :dark="settingsStore.sidebarDark"
         />
       </div>
     </div>
@@ -99,6 +101,12 @@ watch(() => route.path, () => {
   overflow: hidden;
   /* 桌面默认展开：200px */
   width: 200px;
+
+  /* 侧边栏深色模式：深蓝底（若依风 #304156） + 浅色文字 */
+  &.is-dark {
+    background: #304156;
+    border-right-color: #1f2d3d;
+  }
 
   /* 桌面折叠：64px（仅图标） */
   &.is-collapsed {

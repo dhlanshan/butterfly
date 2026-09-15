@@ -16,12 +16,6 @@ const router = createRouter({
     routes: [...staticRoutes, ...notFoundAndNoPower]
 });
 
-console.log("nnnnnnn",
-
-    router.getRoutes().map(r => r.path)
-
-)
-
 /**
  * 路由加载前需要判断用户是否登录
  * 1、去登录页，无token，放行

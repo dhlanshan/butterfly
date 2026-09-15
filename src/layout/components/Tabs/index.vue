@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import {useRouter, useRoute} from "vue-router";
-import {Refresh, Menu as IconMenu, Close} from "@element-plus/icons-vue";
+import {
+    Refresh, Menu as IconMenu, Close, Back, Right, Switch as IconSwitch, Minus, FullScreen, Aim,
+} from "@element-plus/icons-vue";
 import {useTabsStoreHook} from "@/store/modules/tabs.ts";
 import {useRouteConfigStoreHook} from "@/store/modules/route-config.ts";
+import {useSettingsStoreHook} from "@/store/modules/settings.ts";
 import {storeToRefs} from "pinia";
 import {findCategoryById} from "@/utils/other.ts";
 
 const router = useRouter();
 const route = useRoute();
 const tabsStore = useTabsStoreHook();
+const settingsStore = useSettingsStoreHook();
 const {tabs, activePath} = storeToRefs(tabsStore);
 const routeStore = useRouteConfigStoreHook();
 const {routeTree} = storeToRefs(routeStore);
@@ -41,14 +45,19 @@ const handleClose = (path: string, e: MouseEvent) => {
 };
 
 /* ---------- 刷新当前页 ---------- */
-const refreshKey = ref(0);
+// 通过递增 routeReloadKey 让 Main 里的 :key 变化，强制当前路由组件重挂载（重新加载）。
+// 不再依赖额外的 /redirect 路由，避免跳到不存在的路由导致空白。
 const handleRefresh = () => {
-    refreshKey.value++;
-    // 通过 replace 重新进入当前路由以触发组件重建
-    const {fullPath} = route;
-    router.replace({path: "/redirect" + fullPath}).catch(() => {
-        // 若无 redirect 路由，则降级为强制刷新当前组件
-    });
+    settingsStore.reloadCurrentRoute();
+};
+
+/* ---------- 内容区全屏 ---------- */
+// 在 html 上切换 content-fullscreen class，由全局 CSS 隐藏侧边栏/Header，
+// 但保留标签栏，让主内容区铺满剩余空间。再次点击退出。
+const isContentFullscreen = ref(false);
+const toggleContentFullscreen = () => {
+    isContentFullscreen.value = !isContentFullscreen.value;
+    document.documentElement.classList.toggle("content-fullscreen", isContentFullscreen.value);
 };
 
 /* ---------- 标签操作下拉 ---------- */
@@ -56,6 +65,9 @@ const handleCommand = (cmd: string) => {
     const path = activePath.value;
     let next: string | null = null;
     switch (cmd) {
+        case "reload":
+            handleRefresh();
+            return;
         case "close-current":
             next = tabsStore.closeTab(path);
             break;
@@ -71,9 +83,35 @@ const handleCommand = (cmd: string) => {
         case "close-all":
             next = tabsStore.closeAll();
             break;
+        case "content-fullscreen":
+            toggleContentFullscreen();
+            return;
     }
     if (next) router.push(next);
 };
+
+/* ---------- 各操作的可用性（用于禁用不可执行的项） ---------- */
+// 当前激活标签索引
+const activeIdx = computed(() => tabs.value.findIndex(t => t.path === activePath.value));
+// 当前激活标签是否可关闭（非固定 affix）
+const canCloseCurrent = computed(() => {
+    const t = tabs.value[activeIdx.value];
+    return !!t && !t.affix;
+});
+// 左侧是否存在可关闭标签（非 affix）
+const canCloseLeft = computed(() =>
+    tabs.value.some((t, i) => i < activeIdx.value && !t.affix)
+);
+// 右侧是否存在可关闭标签
+const canCloseRight = computed(() =>
+    tabs.value.some((t, i) => i > activeIdx.value && !t.affix)
+);
+// 是否存在其他可关闭标签（除当前外还有非 affix）
+const canCloseOther = computed(() =>
+    tabs.value.some(t => !t.affix && t.path !== activePath.value)
+);
+// 是否存在任何可关闭标签
+const canCloseAll = computed(() => tabs.value.some(t => !t.affix));
 
 /* ---------- 标签标题：通过 routeTree 查找 meta.title ---------- */
 const getTitle = (tab: any) => {
@@ -118,20 +156,28 @@ const getTitle = (tab: any) => {
         </div>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item command="close-current">
-              {{ $t("system.close-current") }}
+            <!-- 重新加载 -->
+            <el-dropdown-item command="reload">
+              <el-icon><Refresh/></el-icon>{{ $t("system.reload") }}
             </el-dropdown-item>
-            <el-dropdown-item command="close-left-side">
-              {{ $t("system.close-left-side") }}
+            <el-dropdown-item divided command="close-current" :disabled="!canCloseCurrent">
+              <el-icon><Close/></el-icon>{{ $t("system.close-current-tab") }}
             </el-dropdown-item>
-            <el-dropdown-item command="close-right-side">
-              {{ $t("system.close-right-side") }}
+            <el-dropdown-item command="close-left-side" :disabled="!canCloseLeft">
+              <el-icon><Back/></el-icon>{{ $t("system.close-left-tab") }}
             </el-dropdown-item>
-            <el-dropdown-item command="close-other">
-              {{ $t("system.close-other") }}
+            <el-dropdown-item divided command="close-right-side" :disabled="!canCloseRight">
+              <el-icon><Right/></el-icon>{{ $t("system.close-right-tab") }}
             </el-dropdown-item>
-            <el-dropdown-item command="close-all" divided>
-              {{ $t("system.close-all") }}
+            <el-dropdown-item command="close-other" :disabled="!canCloseOther">
+              <el-icon><IconSwitch/></el-icon>{{ $t("system.close-other-tab") }}
+            </el-dropdown-item>
+            <el-dropdown-item divided command="close-all" :disabled="!canCloseAll">
+              <el-icon><Minus/></el-icon>{{ $t("system.close-all-tab") }}
+            </el-dropdown-item>
+            <el-dropdown-item divided command="content-fullscreen">
+              <el-icon><component :is="isContentFullscreen ? Aim : FullScreen"/></el-icon>
+              {{ isContentFullscreen ? $t("system.exit-content-fullscreen") : $t("system.content-fullscreen") }}
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>

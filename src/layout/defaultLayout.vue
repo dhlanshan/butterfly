@@ -30,7 +30,7 @@ useAntiDebug();
         <Footer v-show="settingsStore.showFooter"/>
       </el-container>
     </el-container>
-    <!-- 全局水印层 -->
+    <!-- 全局水印遮罩（fixed，覆盖整个视口，不随路由切换重建） -->
     <BWatermark/>
   </div>
 </template>
@@ -39,5 +39,14 @@ useAntiDebug();
 .common-layout {
   height: 100vh;
   overflow: hidden;
+}
+
+/* 外层 el-container 始终撑满 100vh：
+   - side/mix 模式下 Aside 自带 100vh 高度会撑起外层容器；
+   - top 模式无 Aside，外层容器会塌缩成内容高度，导致 Main 的 flex:1 无确定高度可填、
+     Footer 被顶到上方。这里强制外层容器高度 100%，内层纵向容器靠 flex 默认的
+     align-items: stretch 拉伸到等高，Main 即可填满剩余空间把 Footer 压到底部。 */
+.common-layout > .el-container {
+  height: 100%;
 }
 </style>

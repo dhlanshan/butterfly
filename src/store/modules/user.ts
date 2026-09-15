@@ -22,7 +22,6 @@ export const useUserStore = defineStore("user", () => {
     const login = async (data: LoginReq) => {
         const resp = await loginApi(data)
         if (resp.code !== 0) {
-            console.log("aaa", resp.msg)
             throw new Error(resp.msg || "登录失败");
         }
 

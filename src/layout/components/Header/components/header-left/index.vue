@@ -53,7 +53,7 @@ const breadcrumbs = computed(() => {
           v-for="(item, index) in breadcrumbs"
           :key="item.path"
           :class="{ 'is-current': index === breadcrumbs.length - 1 }"
-          :to="index === breadcrumbs.length - 1 ? undefined : { path: item.path }"
+          :to="(item.meta.type === 2 && index !== breadcrumbs.length - 1) ? { path: item.path } : undefined"
       >
         {{ $t(`menu.${item.meta.title}`) }}
       </el-breadcrumb-item>
@@ -93,10 +93,20 @@ const breadcrumbs = computed(() => {
     white-space: nowrap;
     overflow: hidden;
 
-    /* 覆盖 Element Plus 默认：链接项（父级）改为普通字重 + 浅灰 */
-    :deep(.el-breadcrumb__inner.is-link) {
+    /* 覆盖 Element Plus 默认：非当前项（父级/目录）改为普通字重 + 浅灰 */
+    :deep(.el-breadcrumb__inner) {
       font-weight: 400;
       color: var(--el-text-color-secondary);
+
+      /* 可点击的叶子项（type 2）保留链接 hover 效果 */
+      &.is-link {
+        color: var(--el-text-color-secondary);
+        transition: color 0.2s;
+
+        &:hover {
+          color: var(--el-color-primary);
+        }
+      }
     }
 
     /* 当前页（最后一项）：加粗 + 深色 */

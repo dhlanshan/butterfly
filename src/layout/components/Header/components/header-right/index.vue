@@ -193,11 +193,6 @@ const handleCommand = async (cmd: string) => {
     height: 100%;
     padding: 0 8px;
     cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:hover {
-      background-color: var(--el-fill-color-light);
-    }
 
     .username {
       margin: 0 4px 0 8px;

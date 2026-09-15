@@ -28,6 +28,13 @@ const menuLayoutOptions = [
     {value: "top", labelKey: "system.menu-layout-top"},
     {value: "mix", labelKey: "system.menu-layout-mix"},
 ] as const;
+
+/* ---------- 主题设置：页面过渡可选项 ---------- */
+const pageTransitionOptions = [
+    {value: "light", labelKey: "system.transition-light"},
+    {value: "card", labelKey: "system.transition-card"},
+    {value: "fade", labelKey: "system.transition-fade"},
+] as const;
 </script>
 
 <template>
@@ -61,6 +68,47 @@ const menuLayoutOptions = [
               <el-icon><Check/></el-icon>
             </span>
           </div>
+        </div>
+      </div>
+
+      <!-- 主题设置 -->
+      <div class="section">
+        <div class="section-title">{{ $t("system.theme-settings") }}</div>
+        <!-- 主题色：实时写 store，store 内 watch 会即时更新全局 --el-color-primary -->
+        <div class="setting-row">
+          <span class="label">{{ $t("system.theme-color") }}</span>
+          <el-color-picker v-model="settingsStore.themeColor" show-alpha/>
+        </div>
+        <!-- 色弱模式：html 加 color-weak class -->
+        <div class="setting-row">
+          <span class="label">{{ $t("system.color-weakness-mode") }}</span>
+          <el-switch v-model="settingsStore.colorWeak"/>
+        </div>
+        <!-- 灰色模式：html 加 grey-mode class -->
+        <div class="setting-row">
+          <span class="label">{{ $t("system.grey-mode") }}</span>
+          <el-switch v-model="settingsStore.greyMode"/>
+        </div>
+        <!-- 侧边栏深色：Aside 切换深色背景 -->
+        <div class="setting-row">
+          <span class="label">{{ $t("system.sidebar-dark") }}</span>
+          <el-switch v-model="settingsStore.sidebarDark"/>
+        </div>
+        <!-- 页面过渡：路由切换动画 -->
+        <div class="setting-row">
+          <span class="label">{{ $t("system.page-transition") }}</span>
+          <el-select
+              v-model="settingsStore.pageTransition"
+              size="small"
+              class="row-select"
+          >
+            <el-option
+                v-for="opt in pageTransitionOptions"
+                :key="opt.value"
+                :value="opt.value"
+                :label="$t(opt.labelKey)"
+            />
+          </el-select>
         </div>
       </div>
 
@@ -116,7 +164,7 @@ const menuLayoutOptions = [
         </div>
         <div class="setting-row">
           <span class="label">{{ $t("system.watermark-gap") }}</span>
-          <el-slider v-model="settingsStore.watermark.gap" :min="100" :max="400" :step="10" class="row-slider"/>
+          <el-slider v-model="settingsStore.watermark.gap" :min="0" :max="400" :step="10" class="row-slider"/>
         </div>
       </div>
 
@@ -182,6 +230,10 @@ const menuLayoutOptions = [
 
   .row-slider {
     width: 160px;
+  }
+
+  .row-select {
+    width: 120px;
   }
 }
 
