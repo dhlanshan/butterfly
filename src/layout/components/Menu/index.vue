@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import MenuItem from './menu-item.vue'
 import {useSettingsStoreHook} from "@/store/modules/settings.ts";
+import {useRoutingMethod} from "@/hooks/useRoutingMethod.ts";
 
 interface Props {
   routeTree: Menu.MenuOptions[];
@@ -10,6 +11,8 @@ interface Props {
 }
 
 const settingsStore = useSettingsStoreHook();
+// 菜单点击分流（纯外链 window.open / iframe与内部页 router.push），替代 :router=true 自动导航
+const {handleMenuSelect} = useRoutingMethod();
 const props = withDefaults(defineProps<Props>(), {
   routeTree: () => [],
   collapse: false,
@@ -26,7 +29,6 @@ const darkColors = {
 
 <template>
   <el-menu
-      :router="true"
       :default-active="$route.path"
       :collapse="props.collapse"
       :collapse-transition="false"
@@ -35,6 +37,7 @@ const darkColors = {
       :background-color="props.dark ? darkColors.background : undefined"
       :text-color="props.dark ? darkColors.textColor : undefined"
       :active-text-color="props.dark ? darkColors.activeTextColor : undefined"
+      @select="handleMenuSelect"
   >
     <MenuItem :route-tree="props.routeTree" />
   </el-menu>
@@ -53,6 +56,14 @@ const darkColors = {
 :deep(.el-sub-menu__title) {
   height: 44px;
   line-height: 44px;
+}
+
+/* 图标与文字对齐：折叠态依赖 .el-icon 作为唯一可见图标位 */
+:deep(.el-menu-item .el-icon),
+:deep(.el-sub-menu__title .el-icon) {
+  width: 18px;
+  font-size: 16px;
+  margin-right: 8px;
 }
 
 /* 折叠时隐藏菜单文字，避免溢出 */

@@ -1,12 +1,31 @@
 <script setup lang="ts">
 import {Fold, Expand} from "@element-plus/icons-vue";
 import {useSettingsStoreHook} from "@/store/modules/settings.ts";
+import {useRouteConfigStoreHook} from "@/store/modules/route-config.ts";
 import {useRoutingMethod} from "@/hooks/useRoutingMethod.ts";
+import {hasMixSidebar} from "@/hooks/useMenuLayout.ts";
 import {useRoute} from "vue-router";
+import {storeToRefs} from "pinia";
 
 const settingsStore = useSettingsStoreHook();
+const {routeTree} = storeToRefs(useRouteConfigStoreHook());
 const route = useRoute();
 const {getAllParentRoute} = useRoutingMethod();
+
+/**
+ * 折叠按钮是否展示：必须与 Aside 的 showAside 条件一致，否则会出现
+ * 「侧边栏已卸掉、按钮还在、点了没反应」的假折叠。
+ * - 移动端：始终展示（抽屉开关）
+ * - top 桌面端：无侧边栏，隐藏
+ * - mix 桌面端：命中顶层项即展示（目录有子菜单 / 叶子回显自身）
+ * - side 桌面端：始终展示
+ */
+const showCollapseTrigger = computed(() => {
+    if (settingsStore.isMobile) return true;
+    if (settingsStore.menuLayout === "top") return false;
+    if (settingsStore.menuLayout === "mix") return hasMixSidebar(route.path, routeTree.value);
+    return true;
+});
 
 // 当前路由的所有父级（含自身），用于生成面包屑
 const breadcrumbs = computed(() => {
@@ -28,13 +47,14 @@ const breadcrumbs = computed(() => {
       :class="{ 'is-flex-fill': settingsStore.menuLayout === 'side' || settingsStore.isMobile }"
   >
     <!--
-      折叠按钮：
-      - side / mix 桌面端：有侧边栏，展示按钮控制折叠。
+      折叠按钮：必须与侧边栏是否真正存在对齐。
+      - side 桌面端：有侧边栏，展示。
+      - mix 桌面端：命中顶层项即有侧边栏（叶子回显自身），展示折叠按钮。
       - top 桌面端：无侧边栏，隐藏。
-      - 移动端：所有模式都展示（用于打开抽屉式菜单，与 side 模式一致）。
+      - 移动端：所有模式都展示（打开抽屉式菜单）。
     -->
     <div
-        v-if="settingsStore.menuLayout !== 'top' || settingsStore.isMobile"
+        v-if="showCollapseTrigger"
         class="collapse-trigger"
         @click="settingsStore.toggleCollapse"
     >

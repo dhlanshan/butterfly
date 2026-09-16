@@ -4,7 +4,8 @@
  * 三种菜单布局模式（settingsStore.menuLayout）：
  * - side：左侧菜单（完整路由树渲染在侧边栏）
  * - top：顶部菜单（完整路由树渲染在顶部横向菜单，无侧边栏）
- * - mix：混合菜单（顶层菜单渲染在顶部横向菜单，当前激活顶层项的子菜单渲染在侧边栏）
+ * - mix：混合菜单（顶层菜单在顶部；侧边栏渲染当前顶层项的子菜单，
+ *   若顶层是叶子则回显该项本身，保证首页/许可列表这类无子菜单页左侧仍有对应项）
  *
  * 这里集中处理「混合模式」下需要的路由树裁剪与激活项匹配逻辑，
  * 避免在多个组件里重复实现。
@@ -64,9 +65,14 @@ export const getActiveTopItem = (
 };
 
 /**
- * 取混合模式侧边栏要渲染的子树：
- * - 当前路由所属顶层项的 children（去掉顶层目录本身）。
- * - 顶层项是叶子（无 children）或未命中时返回空数组。
+ * 取混合模式侧边栏要渲染的子树。
+ *
+ * - 顶层目录（有 children）：侧边栏只渲染其子菜单（顶部已展示该目录）。
+ * - 顶层叶子（无 children，如首页、许可列表）：侧边栏回显该项本身，
+ *   与示例混合菜单一致——顶部「首页」高亮的同时，左侧也有对应的「首页」菜单。
+ * - 未命中顶层项：返回空数组。
+ *
+ * 不拷贝节点、不改原树，叶子场景只包一层数组引用，O(1)。
  */
 export const getMixSubTree = (
     routePath: string,
@@ -74,5 +80,19 @@ export const getMixSubTree = (
 ): Menu.MenuOptions[] => {
     const top = getActiveTopItem(routePath, routeTree);
     if (!top) return [];
-    return top.children || [];
+    const children = top.children;
+    if (Array.isArray(children) && children.length) return children;
+    // 顶层叶子：把自身作为侧边栏唯一项
+    if (isLeaf(top)) return [top];
+    return [];
 };
+
+/**
+ * 桌面端混合模式是否需要侧边栏。
+ * 顶层目录有子菜单、或顶层叶子回显自身时都为 true；未命中路由时为 false。
+ * 与 getMixSubTree 同源，避免 Aside / 折叠按钮各自再扫一遍树。
+ */
+export const hasMixSidebar = (
+    routePath: string,
+    routeTree: Menu.MenuOptions[]
+): boolean => getMixSubTree(routePath, routeTree).length > 0;

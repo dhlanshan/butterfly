@@ -12,9 +12,11 @@
  * 通过 settingsStore.menuLayout 区分两种渲染方式。
  */
 import MenuItem from "@/layout/components/Menu/menu-item.vue";
+import MenuIcon from "@/layout/components/Menu/menu-icon.vue";
 import {useSettingsStoreHook} from "@/store/modules/settings.ts";
 import {useMenuMethod} from "@/hooks/useMenuMethod.ts";
 import {getFirstLeafPath, getActiveTopItem} from "@/hooks/useMenuLayout.ts";
+import {useRoutingMethod} from "@/hooks/useRoutingMethod.ts";
 import {useRoute} from "vue-router";
 
 interface Props {
@@ -38,6 +40,9 @@ const mixActiveIndex = computed(() => {
 
 // mix 模式下，顶层目录点击要跳转到的「第一个叶子路径」缓存
 const firstLeafPath = (item: Menu.MenuOptions) => getFirstLeafPath(item);
+
+// 菜单点击分流（纯外链 window.open / iframe与内部页 router.push），替代 :router=true 自动导航
+const {handleMenuSelect} = useRoutingMethod();
 </script>
 
 <template>
@@ -45,10 +50,10 @@ const firstLeafPath = (item: Menu.MenuOptions) => getFirstLeafPath(item);
   <el-menu
       v-if="settingsStore.menuLayout === 'top'"
       mode="horizontal"
-      :router="true"
       :default-active="$route.path"
       :ellipsis="false"
       class="header-menu"
+      @select="handleMenuSelect"
   >
     <MenuItem :route-tree="props.routeTree"/>
   </el-menu>
@@ -57,19 +62,21 @@ const firstLeafPath = (item: Menu.MenuOptions) => getFirstLeafPath(item);
   <el-menu
       v-else
       mode="horizontal"
-      :router="true"
       :default-active="mixActiveIndex"
       :ellipsis="false"
       class="header-menu"
+      @select="handleMenuSelect"
   >
     <template v-for="item in props.routeTree" :key="item.path">
       <!-- 顶层叶子菜单：直接可点 -->
       <el-menu-item v-if="aMenuShow(item)" :index="item.path">
-        {{ $t(`menu.${item.meta.title}`) }}
+        <MenuIcon :svg-icon="item.meta.svgIcon" :icon="item.meta.icon" />
+        <span>{{ $t(`menu.${item.meta.title}`) }}</span>
       </el-menu-item>
       <!-- 顶层目录：index 指向其第一个叶子，点击直达首个子页面 -->
       <el-menu-item v-else-if="menuShow(item)" :index="firstLeafPath(item)">
-        {{ $t(`menu.${item.meta.title}`) }}
+        <MenuIcon :svg-icon="item.meta.svgIcon" :icon="item.meta.icon" />
+        <span>{{ $t(`menu.${item.meta.title}`) }}</span>
       </el-menu-item>
     </template>
   </el-menu>
@@ -82,5 +89,10 @@ const firstLeafPath = (item: Menu.MenuOptions) => getFirstLeafPath(item);
   height: 100%;
   border-bottom: none !important;
   background-color: transparent;
+
+  /* 横向菜单图标与文字垂直居中，间距与侧边菜单接近 */
+  :deep(.el-menu-item .el-icon) {
+    margin-right: 6px;
+  }
 }
 </style>

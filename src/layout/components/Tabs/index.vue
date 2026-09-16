@@ -30,6 +30,16 @@ watch(
     {immediate: true}
 );
 
+/* ---------- 路由树就绪后，批量校正所有持久化标签的 meta 快照 ---------- */
+// 路由配置变更（如改 affix）后刷新页面，持久化恢复出的旧标签（含非激活）需按最新 meta 全部刷新。
+// immediate: 处理「Tabs 挂载时 routeTree 已构建好」的情况；routeTree 后续变化（重新初始化）时再触发。
+// deep: false：initSetRouter 是整体重新赋值 routeTree.value（引用变化即触发），无需深监听，避免对大树深比较的开销。
+watch(
+    routeTree,
+    (tree) => tabsStore.reconcileWithRouteTree(tree),
+    {immediate: true, deep: false}
+);
+
 /* ---------- 点击标签跳转 ---------- */
 const handleClick = (tab: any) => {
     if (route.path !== tab.path) {

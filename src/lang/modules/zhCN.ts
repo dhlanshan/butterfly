@@ -172,6 +172,7 @@ export default {
         ["tenant"]: "租户管理",
         ["codegen"]: "代码生成",
         ["plugins-manager"]: "插件管理",
-        ["QQQQ"]: "哈哈哈"
+        ["QQQQ"]: "哈哈哈",
+        ["license"]: "许可列表"
     },
 };

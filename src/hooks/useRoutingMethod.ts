@@ -2,6 +2,7 @@ import pinia from "@/store/index";
 import {storeToRefs} from "pinia";
 import {useRouteConfigStore} from "@/store/modules/route-config";
 import {findCategoryById, findPathOfParentNode} from "@/utils/other";
+import router from "@/router/index";
 
 /**
  * 路由处理hooks，内置多种路由处理场景
@@ -43,14 +44,32 @@ export const useRoutingMethod = () => {
 
 
     /**
-     * 处理外链跳转，打开一个新窗口并根据url跳转
-     * @param {any} route 路由
+     * 菜单点击统一分流（替代 el-menu 的 :router=true 自动导航）。
+     *
+     * 三种形态：
+     * - 纯外链（meta.link 非空 && meta.iframe=false）：window.open 新标签页打开，
+     *   不进系统路由、不开标签页、不改变当前页。
+     * - iframe 内嵌外链（meta.link 非空 && meta.iframe=true）：正常 router.push，
+     *   由 Main 内容区根据 meta 渲染 <iframe>。
+     * - 内部页（无 link）：正常 router.push。
+     *
+     * 性能：菜单点击是低频用户操作，routeList 已是扁平数组，O(N) 线性查找即可，
+     * 无需对每个点击递归搜索路由树。
+     *
+     * @param index 被点击菜单项的 index（即目标 path；mix 模式目录项为首个叶子 path）
      */
-    const openExternalLinks = (route: any) => {
-        // 处理外链跳转
-        if (route.meta.link && !route.meta.iframe) {
-            window.open(route.meta.link as string, "_blank");
+    const handleMenuSelect = (index: string) => {
+        const routerStore = useRouteConfigStore(pinia);
+        const {routeList} = storeToRefs(routerStore);
+        const item = routeList.value.find((it: any) => it.path === index);
+        const meta = item?.meta;
+        // 纯外链：新标签页打开，不导航
+        if (meta?.link && !meta.iframe) {
+            window.open(meta.link as string, "_blank");
+            return;
         }
+        // 内部页 / iframe 内嵌：正常导航
+        router.push(index);
     };
 
     /**
@@ -65,7 +84,7 @@ export const useRoutingMethod = () => {
     return {
         findLinearArray,
         getAllParentRoute,
-        openExternalLinks,
+        handleMenuSelect,
         isDynamicRoute,
         hasRoute
     };

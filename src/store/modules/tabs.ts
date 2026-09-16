@@ -33,19 +33,56 @@ export const useTabsStore = defineStore("tabs", {
         addTab(route: RouteLocationNormalized) {
             this.activePath = route.path;
             const exist = this.tabs.find(t => t.path === route.path);
+            // 取 meta，兼容动态路由无 meta 的情况
+            const meta = (route.meta || {}) as any;
             if (exist) {
                 // 更新 fullPath（动态路由参数变化时）
                 exist.fullPath = route.fullPath;
+                // 同步最新的 meta 字段（affix / title）：
+                // 这两个字段来自路由配置，路由配置变更（如改 affix）后刷新页面，
+                // 已存在的标签需按最新 meta 刷新，否则会一直保留旧值（如旧 affix=true 仍固定）。
+                exist.affix = !!meta.affix;
+                exist.title = meta.title || exist.title;
                 return;
             }
-            // 取 meta.title，兼容动态路由无 meta 的情况
-            const meta = (route.meta || {}) as any;
             this.tabs.push({
                 path: route.path,
                 name: (route.name as string) || route.path,
                 title: meta.title || route.path,
                 affix: !!meta.affix,
                 fullPath: route.fullPath,
+            });
+        },
+        /**
+         * 用路由树批量校正「所有」已存在标签的 meta 快照（affix / title）。
+         *
+         * 高性能实现（O(树大小 + 标签数)）：
+         * - 先把路由树「单次」迭代拍平成 Map<path, meta>（用栈迭代，避免递归栈溢出）；
+         * - 再逐个标签 O(1) 查表校正，不对每个标签都递归搜索整棵树（那样是 O(标签数 × 树大小)）。
+         *
+         * 场景：路由配置变更（如改 affix）后刷新页面，持久化恢复出的旧标签（含非激活标签）
+         * 需按最新 meta 全部刷新。routeTree 构建完成后由 Tabs 组件触发一次即可。
+         * 路由树里找不到的标签（已删除/外链）保留原状，不主动关闭，避免意外行为。
+         */
+        reconcileWithRouteTree(routeTree: any[]) {
+            if (!routeTree?.length || !this.tabs.length) return;
+            // 1) 单次迭代拍平路由树 -> Map<path, meta>（栈迭代，无递归）
+            const metaMap = new Map<string, any>();
+            const stack: any[] = [...routeTree];
+            while (stack.length) {
+                const node = stack.pop();
+                if (!node) continue;
+                if (node.path) metaMap.set(node.path, node.meta || {});
+                if (Array.isArray(node.children) && node.children.length) {
+                    stack.push(...node.children);
+                }
+            }
+            // 2) 逐个标签 O(1) 查表，按最新 meta 校正 affix / title
+            this.tabs.forEach(tab => {
+                const meta = metaMap.get(tab.path);
+                if (!meta) return; // 路由树里找不到，保留原状
+                tab.affix = !!meta.affix;
+                tab.title = meta.title || tab.title;
             });
         },
         /** 关闭指定标签，返回下一个应激活的 path */
