@@ -19,42 +19,53 @@ export const moduleReplacement = (tree: any) => {
 
 /**
  * 模块匹配
- * 1、导入 views 目录及其子目录下的所有 .vue 文件。
- * 2、匹配views下的所有文件路径，将模块转换为按需引入的真实模块
- * 3、未匹配上，不做处理
+ * 1、导入 views / plugins 下的 .vue，在模块加载时建成「相对路径 → 懒加载函数」Map。
+ * 2、按 item.component 字符串 O(1) 查表，命中则替换为真实 import。
+ * 3、未匹配上，不做处理。
+ *
+ * 路径约定：
+ * - views：相对 src/views/（如 home/home → src/views/home/home.vue）
+ * - plugins：相对 src/（如 plugins/foo/bar → src/plugins/foo/bar.vue，与历史 component 写法一致）
+ * 用根目录标记切片，不用 split("views/")，子目录名再叫 views 也能对上。
  */
-// 匹配views里面所有的.vue文件
-const modules = import.meta.glob("@/views/**/*.vue");
-// 匹配插件目录下的.vue文件
+const viewModules = import.meta.glob("@/views/**/*.vue");
 const pluginModules = import.meta.glob("@/plugins/**/*.vue");
 
-export const moduleMatch = (item: any) => {
-    let matched = false;
-    // 匹配每个views文件夹下的文件路径
-    for (const key in modules) {
-        const dir = key.split("views/")[1].replace(".vue", "");
-        // 若匹配上，则替换真实模块
-        if (item.component === dir) {
-            // 按需引入modules
-            // 将模块的导入操作和实际使用操作解耦，使得我们可以在需要的时候才执行导入操作
-            item.component = () => modules[key]();
-            matched = true;
-            break;
-        }
-    }
+const VIEW_ROOT = "/src/views/";
+const SRC_ROOT = "/src/";
 
-    // 如果在主views目录中未找到，则在插件目录中查找
-    if (!matched) {
-        for (const key in pluginModules) {
-            const dir = key.split("src/")[1].replace(".vue", "");
-            // 若匹配上，则替换真实模块
-            if (item.component === dir) {
-                // 按需引入插件modules
-                item.component = () => pluginModules[key]();
-                break;
-            }
-        }
+/**
+ * 从 glob key 截出相对 root 的路径（不含 .vue）。
+ * 定位完整根标记再 slice 到末尾，避免 split 在同名目录处截断。
+ */
+const relativeToRoot = (globKey: string, root: string): string => {
+    const i = globKey.indexOf(root);
+    if (i < 0) return "";
+    return globKey.slice(i + root.length).replace(/\.vue$/i, "");
+};
+
+/** 启动时建表一次 O(文件数)；之后每个路由 O(1) 查，避免 O(路由数 × 文件数) 的嵌套扫描 */
+const buildLoaderMap = (
+    glob: Record<string, () => Promise<unknown>>,
+    root: string
+): Map<string, () => Promise<unknown>> => {
+    const map = new Map<string, () => Promise<unknown>>();
+    for (const key in glob) {
+        const dir = relativeToRoot(key, root);
+        if (dir) map.set(dir, glob[key]);
     }
+    return map;
+};
+
+const viewLoaderMap = buildLoaderMap(viewModules, VIEW_ROOT);
+const pluginLoaderMap = buildLoaderMap(pluginModules, SRC_ROOT);
+
+export const moduleMatch = (item: any) => {
+    const name = item?.component;
+    // 目录型路由 component 为空，无需查表
+    if (!name || typeof name !== "string") return;
+    const loader = viewLoaderMap.get(name) ?? pluginLoaderMap.get(name);
+    if (loader) item.component = loader;
 };
 
 /**
