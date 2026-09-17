@@ -35,6 +35,13 @@ const pageTransitionOptions = [
     {value: "card", labelKey: "system.transition-card"},
     {value: "fade", labelKey: "system.transition-fade"},
 ] as const;
+
+/* ---------- 页签风格可选项（灵动 / 卡片 / 谷歌） ---------- */
+const tabStyleOptions = [
+    {value: "smart", labelKey: "system.tab-style-smart"},
+    {value: "card", labelKey: "system.tab-style-card"},
+    {value: "google", labelKey: "system.tab-style-google"},
+] as const;
 </script>
 
 <template>
@@ -126,6 +133,19 @@ const pageTransitionOptions = [
         >
           <span class="label">{{ $t(item.labelKey) }}</span>
           <el-switch v-model="settingsStore[item.key]"/>
+        </div>
+        <!-- 页签风格：标签栏关闭时一并隐藏，避免改了看不见 -->
+        <div v-if="settingsStore.showTabs" class="setting-row">
+          <span class="label">{{ $t("system.tab-style") }}</span>
+          <el-radio-group v-model="settingsStore.tabStyle" size="small">
+            <el-radio-button
+                v-for="opt in tabStyleOptions"
+                :key="opt.value"
+                :value="opt.value"
+            >
+              {{ $t(opt.labelKey) }}
+            </el-radio-button>
+          </el-radio-group>
         </div>
       </div>
 

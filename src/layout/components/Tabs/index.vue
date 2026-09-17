@@ -191,7 +191,7 @@ watch(activePath, () => scrollActiveIntoView());
 </script>
 
 <template>
-  <div class="tabs-bar">
+  <div class="tabs-bar" :class="'is-tab-' + settingsStore.tabStyle">
     <!-- 向左滚动：仅标签展示不全时显示；已到最左则禁用 -->
     <div
         v-if="needScroll"
@@ -409,6 +409,77 @@ watch(activePath, () => scrollActiveIntoView());
       &:hover {
         color: var(--el-color-primary);
         background-color: var(--el-fill-color-light);
+      }
+    }
+  }
+
+  /* ---------- 卡片：矮圆角块在栏内垂直居中；未选中浅灰底，选中白底灰边 ---------- */
+  &.is-tab-card {
+    .tabs-inner {
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+    }
+
+    .tab-item {
+      height: 28px;
+      /* 透明边占位，避免选中时 1px 描边把高度撑偏 */
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--el-text-color-primary);
+      background-color: var(--el-fill-color-light);
+      box-sizing: border-box;
+      transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+
+      &:hover {
+        color: var(--el-text-color-primary);
+      }
+
+      &.active {
+        background-color: var(--el-bg-color);
+        border-color: var(--el-border-color);
+
+        &::after {
+          display: none;
+        }
+      }
+    }
+  }
+
+  /* ---------- 谷歌：mask-border 切 Chrome 轮廓，底角尖尾在 slice 里不拉伸 ---------- */
+  $chrome-mask: url("data:image/svg+xml,%3Csvg width='68' height='34' viewBox='0 0 68 34' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='m27,0c-7.99582,0 -11.95105,0.00205 -12,12l0,6c0,8.284 -0.48549,16.49691 -8.76949,16.49691l54.37857,-0.11145c-8.284,0 -8.60908,-8.10146 -8.60908,-16.38546l0,-6c0.11145,-12.08445 -4.38441,-12 -12,-12l-13,0z' fill='%23000'/%3E%3C/svg%3E");
+
+  &.is-tab-google {
+    background-color: var(--el-fill-color-light);
+    border-bottom: none;
+
+    .tabs-inner {
+      box-sizing: border-box;
+      align-items: stretch;
+      padding: 3px 20px 0;
+    }
+
+    .tab-item {
+      z-index: 1;
+      margin: 0 -10px;
+      padding: 0 28px;
+      color: var(--el-text-color-regular);
+      -webkit-mask-box-image: $chrome-mask 12 27 15 fill;
+
+      &:hover {
+        z-index: 2;
+        background-color: #dee1e6;
+      }
+
+      &.active {
+        z-index: 3;
+        color: var(--el-color-primary);
+        /* 浅天蓝：约 16% 主色叠白（本项目 light-9 混成了 90% 主色，不能直接用） */
+        background-color: color-mix(in srgb, var(--el-color-primary) 16%, #ffffff);
+
+        &::after {
+          display: none;
+        }
       }
     }
   }

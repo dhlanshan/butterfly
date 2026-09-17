@@ -21,6 +21,9 @@ export type MenuLayout = "side" | "top" | "mix";
 /** 页面过渡动画：light=轻过渡 / card=卡片 / fade=渐退 */
 export type PageTransition = "light" | "card" | "fade";
 
+/** 页签风格：smart=灵动（下划线） / card=卡片 / google=谷歌（浏览器标签） */
+export type TabStyle = "smart" | "card" | "google";
+
 /* -------------------------------------------------------------------------- */
 /*                          主题色生成工具（hex 混色）                          */
 /* -------------------------------------------------------------------------- */
@@ -73,7 +76,7 @@ const applyThemeColor = (color: string) => {
  * - isDark：黑夜模式
  * - 界面设置：showBreadcrumb / showTabs / showFooter / menuAccordion
  * - 菜单布局：menuLayout
- * - 主题设置：themeColor / colorWeak / greyMode / sidebarDark / pageTransition
+ * - 主题设置：themeColor / colorWeak / greyMode / sidebarDark / pageTransition / tabStyle
  * - 水印设置：watermark
  * - 防调试：antiDebug
  */
@@ -102,6 +105,8 @@ export const useSettingsStore = defineStore("settings", () => {
     const sidebarDark = ref(false);
     // 页面过渡动画
     const pageTransition = ref<PageTransition>("card");
+    // 页签风格（仅影响 Tabs 外观，不改标签数据）
+    const tabStyle = ref<TabStyle>("smart");
 
     // 水印设置
     const watermark = ref<WatermarkConfig>({
@@ -196,6 +201,7 @@ export const useSettingsStore = defineStore("settings", () => {
         greyMode,
         sidebarDark,
         pageTransition,
+        tabStyle,
         // 水印
         watermark,
         // 系统
@@ -223,6 +229,7 @@ export const useSettingsStore = defineStore("settings", () => {
             "greyMode",
             "sidebarDark",
             "pageTransition",
+            "tabStyle",
             "watermark",
             "antiDebug",
         ],
