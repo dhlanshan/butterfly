@@ -63,16 +63,24 @@ const dropHoverIndex = ref(-1);
 let skipTabClick = false;
 let skipTabPath = "";
 let dragOffsetX = 0;
+let dragOffsetY = 0;
 let dragWidth = 0;
+let dragHeight = 0;
 let slotOriginLeft = 0;
 let lastDragX = 0;
 let lastDragY = 0;
 let onDropHoverPointerMove: ((e: PointerEvent) => void) | null = null;
 
+const barRef = ref<HTMLElement | null>(null);
+
 const stopDropHoverWatch = () => {
     if (!onDropHoverPointerMove) return;
     window.removeEventListener("pointermove", onDropHoverPointerMove);
     onDropHoverPointerMove = null;
+};
+
+const stopWinDragOver = () => {
+    window.removeEventListener("dragover", onWinDragOver);
 };
 
 const onTabDragStart = (index: number, e: DragEvent) => {
@@ -85,8 +93,11 @@ const onTabDragStart = (index: number, e: DragEvent) => {
     lastDragY = e.clientY;
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     dragOffsetX = e.clientX - rect.left;
+    dragOffsetY = e.clientY - rect.top;
     dragWidth = rect.width || 80;
+    dragHeight = rect.height || 40;
     slotOriginLeft = rect.left;
+    window.addEventListener("dragover", onWinDragOver);
     const dt = e.dataTransfer;
     if (!dt) return;
     dt.effectAllowed = "move";
@@ -96,14 +107,28 @@ const onTabDragStart = (index: number, e: DragEvent) => {
 const onTabsDragOver = (e: DragEvent) => {
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+};
+
+// 挂在 window：光标离开栏时 dragover 还在；上下重叠或距栏 5px 内仍按半宽换位
+const onWinDragOver = (e: DragEvent) => {
+    if (dragFrom.value < 0) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
     lastDragX = e.clientX;
     lastDragY = e.clientY;
+    const barEl = barRef.value;
+    const scrollEl = scrollRef.value;
+    if (!barEl || !scrollEl) return;
+    const bar = barEl.getBoundingClientRect();
+    const ghostTop = e.clientY - dragOffsetY;
+    const ghostBottom = ghostTop + dragHeight;
+    const slack = 5;
+    if (ghostBottom < bar.top - slack || ghostTop > bar.bottom + slack) return;
     const from = dragFrom.value;
-    if (from < 0 || !scrollRef.value) return;
     const ghostLeft = e.clientX - dragOffsetX;
     const delta = ghostLeft - slotOriginLeft;
     const half = dragWidth / 2;
-    const items = scrollRef.value.querySelectorAll(".tab-item");
+    const items = scrollEl.querySelectorAll(".tab-item");
     if (delta > half && from < items.length - 1) {
         const to = from + 1;
         slotOriginLeft = items[to].getBoundingClientRect().left;
@@ -118,6 +143,7 @@ const onTabsDragOver = (e: DragEvent) => {
 };
 
 const onTabDragEnd = () => {
+    stopWinDragOver();
     const dropped = dragFrom.value;
     dragFrom.value = -1;
     // 拖完常常没有 click，下一轮事件就把标记清掉，避免下一次点标签被误吞
@@ -273,6 +299,7 @@ onUnmounted(() => {
     scrollRO = null;
     scrollRef.value?.removeEventListener("scroll", updateScrollState);
     stopDropHoverWatch();
+    stopWinDragOver();
 });
 
 watch(() => tabs.value.length, () => nextTick(updateScrollState));
@@ -281,6 +308,7 @@ watch(activePath, () => scrollActiveIntoView());
 
 <template>
   <div
+      ref="barRef"
       class="tabs-bar"
       :class="['is-tab-' + settingsStore.tabStyle, { 'is-tab-drag': settingsStore.tabDrag, 'is-tab-dragging': dragFrom >= 0 || dropHoverIndex >= 0 }]"
   >
