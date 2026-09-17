@@ -413,7 +413,10 @@ watch(activePath, () => scrollActiveIntoView());
     }
   }
 
-  /* ---------- 卡片：矮圆角块在栏内垂直居中；未选中浅灰底，选中白底灰边 ---------- */
+  /* 卡片 / 谷歌共用选中底色：约 16% 主色叠白（本项目 light-9 混成了 90% 主色，不能直接用） */
+  $tab-active-bg: color-mix(in srgb, var(--el-color-primary) 16%, #ffffff);
+
+  /* ---------- 卡片：矮圆角块在栏内垂直居中；未选中浅灰底，选中浅主题色 ---------- */
   &.is-tab-card {
     .tabs-inner {
       align-items: center;
@@ -436,8 +439,9 @@ watch(activePath, () => scrollActiveIntoView());
       }
 
       &.active {
-        background-color: var(--el-bg-color);
-        border-color: var(--el-border-color);
+        color: var(--el-color-primary);
+        background-color: $tab-active-bg;
+        border-color: transparent;
 
         &::after {
           display: none;
@@ -450,9 +454,6 @@ watch(activePath, () => scrollActiveIntoView());
   $chrome-mask: url("data:image/svg+xml,%3Csvg width='68' height='34' viewBox='0 0 68 34' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='m27,0c-7.99582,0 -11.95105,0.00205 -12,12l0,6c0,8.284 -0.48549,16.49691 -8.76949,16.49691l54.37857,-0.11145c-8.284,0 -8.60908,-8.10146 -8.60908,-16.38546l0,-6c0.11145,-12.08445 -4.38441,-12 -12,-12l-13,0z' fill='%23000'/%3E%3C/svg%3E");
 
   &.is-tab-google {
-    background-color: var(--el-fill-color-light);
-    border-bottom: none;
-
     .tabs-inner {
       box-sizing: border-box;
       align-items: stretch;
@@ -474,8 +475,7 @@ watch(activePath, () => scrollActiveIntoView());
       &.active {
         z-index: 3;
         color: var(--el-color-primary);
-        /* 浅天蓝：约 16% 主色叠白（本项目 light-9 混成了 90% 主色，不能直接用） */
-        background-color: color-mix(in srgb, var(--el-color-primary) 16%, #ffffff);
+        background-color: $tab-active-bg;
 
         &::after {
           display: none;
