@@ -70,14 +70,31 @@ const darkColors = {
   margin-right: 8px;
 }
 
-/* 折叠时隐藏菜单文字，避免溢出 */
+/* 折叠：64px 仅图标；去掉展开态的图标右边距，让图标在栏内左右居中 */
 .el-menu--collapse {
   width: 64px;
+
+  :deep(.el-menu-item),
+  :deep(.el-sub-menu__title) {
+    justify-content: center;
+    padding: 0 !important;
+  }
+
+  :deep(.el-menu-item .el-icon),
+  :deep(.el-sub-menu__title .el-icon) {
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  :deep(.el-sub-menu__icon-arrow) {
+    display: none;
+  }
 }
 
-/* 深色模式下，子菜单弹出层（teleport 到 body）也需要深色背景 */
+/* 叶子项与带子菜单的标题悬停同一套底色 */
+:deep(.el-menu-item:not(.is-active):hover),
 :deep(.el-sub-menu__title:hover) {
-  background-color: transparent;
+  background-color: var(--el-menu-hover-bg-color);
 }
 
 /*
