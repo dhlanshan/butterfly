@@ -84,7 +84,7 @@ const darkColors = {
 :deep(.el-menu-item .el-icon),
 :deep(.el-sub-menu__title .el-icon) {
   width: 18px;
-  font-size: 16px;
+  font-size: 20px;
   margin-right: 8px;
 }
 
@@ -232,7 +232,7 @@ const darkColors = {
   .el-sub-menu__title .el-icon {
     width: 18px;
     margin-right: 8px;
-    font-size: 16px;
+    font-size: 20px;
   }
 
   .el-menu-item.is-active {
