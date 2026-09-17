@@ -558,6 +558,17 @@ watch(activePath, () => scrollActiveIntoView());
     }
   }
 
+  /* 灵动：邻居不要被停在旧槽位的 :hover 改成主题色；被拖项自己保持悬停字色 */
+  &.is-tab-smart.is-tab-dragging .tab-item {
+    &:not(.is-drag-hover):not(.active):hover {
+      color: var(--el-text-color-secondary);
+    }
+
+    &.is-drag-hover:not(.active) {
+      color: var(--el-color-primary);
+    }
+  }
+
   .tabs-actions {
     display: flex;
     align-items: center;
@@ -658,6 +669,7 @@ watch(activePath, () => scrollActiveIntoView());
     /* 拖着不松手换向时，光标还在旧槽位上，邻居不要再亮悬停底 */
     &.is-tab-dragging .tab-item:not(.is-drag-hover):not(.active):hover {
       z-index: 1;
+      color: var(--el-text-color-regular);
       background-color: transparent;
     }
   }
