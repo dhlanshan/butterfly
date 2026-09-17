@@ -62,6 +62,11 @@ const darkColors = {
   border-radius: 6px;
 }
 
+/* 子菜单标题读取递归写入的缩进，和叶子项同一套层级 */
+:deep(.el-sub-menu__title) {
+  padding-left: var(--bee-menu-pad, 12px) !important;
+}
+
 /* 图标与文字对齐：折叠态依赖 .el-icon 作为唯一可见图标位 */
 :deep(.el-menu-item .el-icon),
 :deep(.el-sub-menu__title .el-icon) {

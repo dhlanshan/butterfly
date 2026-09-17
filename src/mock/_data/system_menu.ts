@@ -74,7 +74,7 @@ export const systemRouter = [
                 "link": "",
                 "iframe": 0,
                 "svgIcon": "",
-                "icon": "IconUser",
+                "icon": "Document",
                 "sort": 0,
                 "type": 2,
                 "permission": "",

@@ -5,7 +5,7 @@
  * 优先级：
  * 1) meta.svgIcon 非空 → 项目 SVG sprite（BSvgIcon，对应 src/assets/svgs/{name}.svg）
  * 2) 否则 meta.icon 非空且能在 @element-plus/icons-vue 中命中 → Element Plus 图标
- * 3) 都空 / 名称无效 → 不渲染，避免空占位撑开菜单项
+ * 3) 都空 / 名称无效 → 渲染不可见的占位 el-icon，保证同级菜单文字左对齐
  *
  * 性能：
  * - Element Plus 图标包在模块级一次性静态导入，做成 Record 查表；
@@ -39,13 +39,19 @@ const epIcon = computed<Component | null>(() => {
   if (useSvg.value || !props.icon) return null;
   return EP_ICON_MAP[props.icon] ?? null;
 });
+const hasIcon = computed(() => useSvg.value || !!epIcon.value);
 </script>
 
 <template>
-  <el-icon v-if="useSvg">
-    <b-svg-icon :name="svgIcon" size="1em" color="currentColor"/>
-  </el-icon>
-  <el-icon v-else-if="epIcon">
-    <component :is="epIcon"/>
+  <el-icon :class="{ 'is-placeholder': !hasIcon }">
+    <b-svg-icon v-if="useSvg" :name="svgIcon" size="1em" color="currentColor"/>
+    <component v-else-if="epIcon" :is="epIcon"/>
   </el-icon>
 </template>
+
+<style scoped lang="scss">
+/* 无图标时仍占位，同级文字才能对齐 */
+.is-placeholder {
+  visibility: hidden;
+}
+</style>
