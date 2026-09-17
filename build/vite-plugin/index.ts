@@ -7,6 +7,9 @@ import {viteMockServe} from "vite-plugin-mock";
 import type {PluginOption} from "vite";
 import {ElementPlusResolver} from "unplugin-vue-components/resolvers";
 
+/** Element Plus 按需：模板 el-xxx / 脚本 ElMessage 等由 Resolver 引入组件与样式 */
+const elementPlusResolver = ElementPlusResolver({importStyle: "css"});
+
 /**
  * 创建 vite 插件
  * @param viteEnv 环境变量
@@ -50,7 +53,7 @@ export const createVitePlugins = (viteEnv: ViteEnv): (PluginOption | PluginOptio
             // 配置文件生成位置
             dts: "src/auto-import.d.ts",
             // navite
-            resolvers: [ElementPlusResolver()]
+            resolvers: [elementPlusResolver]
         }),
 
         // 自动导入组件
@@ -62,7 +65,7 @@ export const createVitePlugins = (viteEnv: ViteEnv): (PluginOption | PluginOptio
             // 配置文件生成位置
             dts: "src/auto-components.d.ts",
             // navi
-            resolvers: [ElementPlusResolver()]
+            resolvers: [elementPlusResolver]
         }),
 
         // Mock API 插件

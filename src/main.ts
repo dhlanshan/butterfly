@@ -1,10 +1,12 @@
 import {createApp} from 'vue'
 import './style.css'
 import App from './App.vue'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-// Element Plus 暗黑主题 CSS 变量（配合 html.dark class 生效）
-import 'element-plus/theme-chalk/dark/css-vars.css'
+// 组件按需由 unplugin-vue-components + ElementPlusResolver 引入，不再全量 app.use(ElementPlus)。
+// 脚本里手写的 ElMessage / ElMessageBox 不会走组件 Resolver，样式在此补一次。
+import "element-plus/es/components/message/style/css"
+import "element-plus/es/components/message-box/style/css"
+// 暗黑主题 CSS 变量（配合 html.dark class 生效）
+import "element-plus/theme-chalk/dark/css-vars.css"
 
 // pinia
 import pinia from "@/store/index";
@@ -19,7 +21,6 @@ import {useSettingsStoreHook} from "@/store/modules/settings.ts";
 
 const app = createApp(App);
 app.use(router);
-app.use(ElementPlus);
 app.use(pinia);
 app.use(i18n);
 
