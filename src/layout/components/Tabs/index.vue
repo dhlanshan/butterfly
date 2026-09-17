@@ -43,10 +43,12 @@ watch(
 
 /* ---------- 点击标签跳转 ---------- */
 const handleClick = (tab: any) => {
-    // 刚拖过则吞掉随后的 click，避免松手又跳一次路由
+    // 只吞紧跟拖拽、点在被拖项上的 click（松手残留）；点别的标签要立刻能切
     if (skipTabClick) {
+        const swallow = tab.path === skipTabPath;
         skipTabClick = false;
-        return;
+        skipTabPath = "";
+        if (swallow) return;
     }
     if (route.path !== tab.path) {
         router.push(tab.fullPath || tab.path);
@@ -59,6 +61,7 @@ const dragFrom = ref(-1);
 // 松手后 :hover 还停在旧槽位；先把悬停钉在落下的标签上，指针真正移动后再交给原生 hover
 const dropHoverIndex = ref(-1);
 let skipTabClick = false;
+let skipTabPath = "";
 let dragOffsetX = 0;
 let dragWidth = 0;
 let slotOriginLeft = 0;
@@ -77,6 +80,7 @@ const onTabDragStart = (index: number, e: DragEvent) => {
     dropHoverIndex.value = -1;
     dragFrom.value = index;
     skipTabClick = true;
+    skipTabPath = tabs.value[index]?.path ?? "";
     lastDragX = e.clientX;
     lastDragY = e.clientY;
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -116,6 +120,11 @@ const onTabsDragOver = (e: DragEvent) => {
 const onTabDragEnd = () => {
     const dropped = dragFrom.value;
     dragFrom.value = -1;
+    // 拖完常常没有 click，下一轮事件就把标记清掉，避免下一次点标签被误吞
+    window.setTimeout(() => {
+        skipTabClick = false;
+        skipTabPath = "";
+    }, 0);
     if (dropped < 0) return;
     dropHoverIndex.value = dropped;
     stopDropHoverWatch();
