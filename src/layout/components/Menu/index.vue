@@ -38,6 +38,8 @@ const darkColors = {
       :text-color="props.dark ? darkColors.textColor : undefined"
       :active-text-color="props.dark ? darkColors.activeTextColor : undefined"
       popper-class="bee-menu-popup"
+      :show-timeout="100"
+      :hide-timeout="100"
       @select="handleMenuSelect"
   >
     <MenuItem :route-tree="props.routeTree" :collapse="props.collapse" />
