@@ -444,7 +444,11 @@ watch(activePath, () => scrollActiveIntoView());
     cursor: pointer;
     transition: color 0.2s;
 
-    /* 拖着走时：真标签留在栏里，左右虚线标出落点；半透明影子由浏览器拖影提供 */
+    /* 拖着走时：栏内实体项半透明占位，和旁边实标签、浏览器拖影区分开 */
+    &.is-dragging {
+      opacity: 0.4;
+    }
+
     &.is-dragging::before {
       content: "";
       position: absolute;
@@ -605,6 +609,11 @@ watch(activePath, () => scrollActiveIntoView());
       &.is-drag-hover:not(.active) {
         z-index: 2;
         background-color: var(--el-fill-color);
+      }
+
+      /* 谷歌底本身就浅，沿用 0.4 会像没底；拖动时只略虚一点 */
+      &.is-dragging {
+        opacity: 0.8;
       }
 
       &.active {
