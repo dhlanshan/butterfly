@@ -33,7 +33,7 @@ const darkColors = {
       :collapse="props.collapse"
       :collapse-transition="false"
       :unique-opened="settingsStore.menuAccordion"
-      :class="{ 'is-menu-dark': props.dark }"
+      :class="{ 'is-menu-dark': props.dark, 'is-menu-night': settingsStore.isDark }"
       :background-color="props.dark ? darkColors.background : undefined"
       :text-color="props.dark ? darkColors.textColor : undefined"
       :active-text-color="props.dark ? darkColors.activeTextColor : undefined"
@@ -49,6 +49,7 @@ const darkColors = {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  background-color: transparent;
 }
 
 /* 菜单项与子菜单标题高度统一为 44px */
@@ -91,6 +92,26 @@ const darkColors = {
   :deep(.el-menu-item:hover),
   :deep(.el-sub-menu__title:hover) {
     background-color: #263445 !important;
+  }
+}
+
+/* 夜模式选中：主色圆角块，不走若依深蓝竖条 */
+.is-menu-night {
+  :deep(.el-menu-item),
+  :deep(.el-sub-menu__title) {
+    margin: 4px 8px;
+    width: calc(100% - 16px);
+    border-radius: 6px;
+  }
+
+  :deep(.el-menu-item.is-active) {
+    background-color: var(--el-color-primary) !important;
+    color: #fff !important;
+  }
+
+  :deep(.el-menu-item:not(.is-active):hover),
+  :deep(.el-sub-menu__title:hover) {
+    background-color: var(--el-fill-color-light) !important;
   }
 }
 </style>

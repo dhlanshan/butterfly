@@ -17,7 +17,7 @@ const title = "JetBrains";
   height: 40px;
   font-size: 12px;
   color: var(--el-text-color-secondary);
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--el-border-color);
   background-color: var(--el-bg-color);
 }
 </style>

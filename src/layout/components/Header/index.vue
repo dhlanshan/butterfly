@@ -42,7 +42,7 @@ const {routeTree} = storeToRefs(routerStore);
   align-items: center;
   height: 60px;
   padding: 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--el-border-color);
   background-color: var(--el-bg-color);
 
   /* top 模式下 Logo 区固定宽度，避免被横向菜单挤压 */

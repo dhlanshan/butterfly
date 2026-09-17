@@ -47,6 +47,7 @@ const bannerTitle = "JetBrains"
     font-weight: bold;
     text-align: left;
     white-space: nowrap;
+    color: var(--el-text-color-primary);
   }
 
   .dark {

@@ -126,17 +126,18 @@ watch(() => route.path, () => {
         'is-collapsed': !settingsStore.isMobile && settingsStore.collapsed,
         'is-hidden': settingsStore.isMobile && settingsStore.collapsed,
         'is-drawer': settingsStore.isMobile && !settingsStore.collapsed,
-        'is-dark': settingsStore.sidebarDark,
+        /* 若依风深蓝侧栏：仅白天生效；夜模式跟 html.dark 变量，避免白壳/深蓝混用 */
+        'is-navy': settingsStore.sidebarDark && !settingsStore.isDark,
       }"
       @transitionend="onAsideTransitionEnd"
   >
     <div class="aside">
-      <Logo :class="{ dark: settingsStore.sidebarDark }"/>
+      <Logo :class="{ dark: settingsStore.sidebarDark && !settingsStore.isDark }"/>
       <div class="layout_side">
         <Menu
             :route-tree="menuTree"
             :collapse="settingsStore.collapsed && !settingsStore.isMobile"
-            :dark="settingsStore.sidebarDark"
+            :dark="settingsStore.sidebarDark && !settingsStore.isDark"
         />
       </div>
     </div>
@@ -153,15 +154,15 @@ watch(() => route.path, () => {
 <style scoped lang="scss">
 .aside-wrap {
   height: 100vh;
-  background: #fff;
-  border-right: 1px solid #f0f0f0;
+  background: var(--el-bg-color);
+  border-right: 1px solid var(--el-border-color);
   transition: width 0.25s ease; /* 时长须与脚本 ASIDE_WIDTH_MS 一致 */
   overflow: hidden;
   /* 桌面默认展开：200px */
   width: 200px;
 
-  /* 侧边栏深色模式：深蓝底（若依风 #304156） + 浅色文字 */
-  &.is-dark {
+  /* 白天「侧边栏深色」：若依风深蓝底；夜模式走 --el-bg-color，不走这套 */
+  &.is-navy {
     background: #304156;
     border-right-color: #1f2d3d;
   }

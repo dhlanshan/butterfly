@@ -280,7 +280,7 @@ watch(activePath, () => scrollActiveIntoView());
   align-items: center;
   height: 40px;
   /* 顶部边框由 Header 提供，这里只保留底部边框，避免双线变粗 */
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--el-border-color);
   background-color: var(--el-bg-color);
 
   .tab-scroll-btn {
@@ -469,7 +469,7 @@ watch(activePath, () => scrollActiveIntoView());
 
       &:hover {
         z-index: 2;
-        background-color: #dee1e6;
+        background-color: var(--el-fill-color);
       }
 
       &.active {
