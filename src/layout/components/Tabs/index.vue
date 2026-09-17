@@ -426,13 +426,11 @@ watch(activePath, () => scrollActiveIntoView());
 
     .tab-item {
       height: 28px;
-      /* 透明边占位，避免选中时 1px 描边把高度撑偏 */
-      border: 1px solid transparent;
       border-radius: 6px;
       color: var(--el-text-color-primary);
       background-color: var(--el-fill-color-light);
       box-sizing: border-box;
-      transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+      transition: color 0.2s, background-color 0.2s;
 
       &:hover {
         color: var(--el-text-color-primary);
@@ -441,7 +439,6 @@ watch(activePath, () => scrollActiveIntoView());
       &.active {
         color: var(--el-color-primary);
         background-color: $tab-active-bg;
-        border-color: transparent;
 
         &::after {
           display: none;
