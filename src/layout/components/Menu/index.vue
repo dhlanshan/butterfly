@@ -37,9 +37,10 @@ const darkColors = {
       :background-color="props.dark ? darkColors.background : undefined"
       :text-color="props.dark ? darkColors.textColor : undefined"
       :active-text-color="props.dark ? darkColors.activeTextColor : undefined"
+      popper-class="bee-menu-popup"
       @select="handleMenuSelect"
   >
-    <MenuItem :route-tree="props.routeTree" />
+    <MenuItem :route-tree="props.routeTree" :collapse="props.collapse" />
   </el-menu>
 </template>
 
@@ -130,6 +131,89 @@ const darkColors = {
   :deep(.el-menu-item:not(.is-active):hover),
   :deep(.el-sub-menu__title:hover) {
     background-color: var(--el-fill-color-light) !important;
+  }
+}
+</style>
+
+<!-- 折叠后子菜单 teleport 到 body，必须非 scoped -->
+<style lang="scss">
+.bee-menu-popup {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  .el-menu--popup {
+    position: relative;
+    min-width: 168px;
+    margin-left: 8px;
+    padding: 3px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--el-border-color-lighter);
+    background: var(--el-bg-color-overlay);
+    box-shadow: var(--el-box-shadow);
+
+    /* 对话气泡小三角：朝向折叠侧栏图标 */
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      top: 15px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+    }
+
+    &::before {
+      left: -7px;
+      border-width: 7px 7px 7px 0;
+      border-color: transparent var(--el-border-color-lighter) transparent transparent;
+    }
+
+    &::after {
+      left: -6px;
+      border-width: 6px 6px 6px 0;
+      border-color: transparent var(--el-bg-color-overlay) transparent transparent;
+    }
+  }
+
+  &[data-popper-placement="right"] .el-menu--popup::before,
+  &[data-popper-placement="right"] .el-menu--popup::after {
+    top: 50%;
+    margin-top: -7px;
+  }
+
+  &[data-popper-placement="right-end"] .el-menu--popup::before,
+  &[data-popper-placement="right-end"] .el-menu--popup::after {
+    top: auto;
+    bottom: 20px;
+  }
+
+  .el-menu-item,
+  .el-sub-menu__title {
+    height: 36px !important;
+    line-height: 36px !important;
+    margin: 0 !important;
+    width: auto !important;
+    padding: 0 12px !important;
+    border-radius: 6px;
+  }
+
+  .el-menu-item .el-icon,
+  .el-sub-menu__title .el-icon {
+    width: 18px;
+    margin-right: 8px;
+    font-size: 16px;
+  }
+
+  .el-menu-item.is-active {
+    color: var(--el-color-primary);
+    background-color: var(--el-fill-color-light);
+  }
+
+  .el-menu-item:not(.is-active):hover,
+  .el-sub-menu__title:hover {
+    background-color: var(--el-fill-color-light);
   }
 }
 </style>

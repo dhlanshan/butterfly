@@ -8,16 +8,21 @@ interface Props {
   routeTree: Menu.MenuOptions[];
   /** 嵌套层级：侧栏顶级为 0，每深入一层 +1，用来给子菜单做左缩进 */
   level?: number;
+  /** 侧栏折叠时弹出层不再做层级缩进 */
+  collapse?: boolean;
 }
 
 const { menuShow, aMenuShow } = useMenuMethod();
 const props = withDefaults(defineProps<Props>(), {
   routeTree: () => [],
   level: 0,
+  collapse: false,
 });
 
-/** 与父级同一套左右 margin；每层只把内容右移 15px */
-const padLeft = computed(() => `${12 + props.level * 15}px`);
+/** 与父级同一套左右 margin；每层只把内容右移 15px（折叠弹出层除外） */
+const padLeft = computed(() =>
+  `${12 + (props.collapse ? 0 : props.level) * 15}px`
+);
 
 </script>
 
@@ -32,7 +37,11 @@ const padLeft = computed(() => `${12 + props.level * 15}px`);
         <MenuIcon :svg-icon="item.meta.svgIcon" :icon="item.meta.icon" />
         <span>{{ $t(`menu.${item.meta.title}`) }}</span>
       </template>
-      <MenuItem :route-tree="item.children || []" :level="props.level + 1" />
+      <MenuItem
+          :route-tree="item.children || []"
+          :level="props.level + 1"
+          :collapse="props.collapse"
+      />
     </el-sub-menu>
     <!--
       叶子菜单（type=2）：
