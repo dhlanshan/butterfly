@@ -52,11 +52,14 @@ const darkColors = {
   background-color: transparent;
 }
 
-/* 菜单项与子菜单标题高度统一为 44px */
+/* 菜单项与子菜单标题：日/夜同一套盒模型，避免切主题时左右错位 */
 :deep(.el-menu-item),
 :deep(.el-sub-menu__title) {
   height: 44px;
   line-height: 44px;
+  margin: 4px 8px;
+  width: calc(100% - 16px);
+  border-radius: 6px;
 }
 
 /* 图标与文字对齐：折叠态依赖 .el-icon 作为唯一可见图标位 */
@@ -95,15 +98,8 @@ const darkColors = {
   }
 }
 
-/* 夜模式选中：主色圆角块，不走若依深蓝竖条 */
+/* 夜模式只改选中/悬停色，不再改 margin/width */
 .is-menu-night {
-  :deep(.el-menu-item),
-  :deep(.el-sub-menu__title) {
-    margin: 4px 8px;
-    width: calc(100% - 16px);
-    border-radius: 6px;
-  }
-
   :deep(.el-menu-item.is-active) {
     background-color: var(--el-color-primary) !important;
     color: #fff !important;
