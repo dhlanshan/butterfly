@@ -48,6 +48,7 @@ export default {
         ["tab-style-smart"]: "smart",
         ["tab-style-card"]: "card",
         ["tab-style-google"]: "google",
+        ["tab-drag"]: "tab drag",
         ["page-footer"]: "page footer",
         ["menu-layout"]: "menu layout",
         ["menu-layout-side"]: "side menu",

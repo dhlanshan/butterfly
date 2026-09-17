@@ -43,11 +43,7 @@ const padLeft = computed(() =>
           :collapse="props.collapse"
       />
     </el-sub-menu>
-    <!--
-      叶子菜单（type=2）：
-      - 绑定 :disabled="item.meta.disable"，禁用项灰显且不可点击（el-menu-item 原生支持）。
-      - 配合 :router="true" 时，disabled 的 el-menu-item 不会触发导航，满足「禁用菜单」语义。
-    -->
+    <!-- 叶子菜单：disabled 灰显且不会走 el-menu @select 导航 -->
     <el-menu-item
         v-else-if="aMenuShow(item)"
         :index="item.path"

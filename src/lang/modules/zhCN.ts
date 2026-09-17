@@ -48,6 +48,7 @@ export default {
         ["tab-style-smart"]: "灵动",
         ["tab-style-card"]: "卡片",
         ["tab-style-google"]: "谷歌",
+        ["tab-drag"]: "页签拖动",
         ["page-footer"]: "页脚",
         ["menu-layout"]: "菜单布局",
         ["menu-layout-side"]: "左侧菜单",

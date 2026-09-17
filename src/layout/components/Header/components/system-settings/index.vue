@@ -134,7 +134,7 @@ const tabStyleOptions = [
           <span class="label">{{ $t(item.labelKey) }}</span>
           <el-switch v-model="settingsStore[item.key]"/>
         </div>
-        <!-- 页签风格：标签栏关闭时一并隐藏，避免改了看不见 -->
+        <!-- 页签风格 / 拖动：标签栏关闭时一并隐藏，避免改了看不见 -->
         <div v-if="settingsStore.showTabs" class="setting-row">
           <span class="label">{{ $t("system.tab-style") }}</span>
           <el-radio-group v-model="settingsStore.tabStyle" size="small">
@@ -146,6 +146,10 @@ const tabStyleOptions = [
               {{ $t(opt.labelKey) }}
             </el-radio-button>
           </el-radio-group>
+        </div>
+        <div v-if="settingsStore.showTabs" class="setting-row">
+          <span class="label">{{ $t("system.tab-drag") }}</span>
+          <el-switch v-model="settingsStore.tabDrag"/>
         </div>
       </div>
 

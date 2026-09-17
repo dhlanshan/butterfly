@@ -115,6 +115,17 @@ export const useTabsStore = defineStore("tabs", {
             this.tabs = this.tabs.filter(t => t.affix);
             return this.tabs[0]?.path || null;
         },
+        /**
+         * 拖拽换位：把 from 处的标签挪到 to。
+         * splice 各一次，O(n)；标签数很少，比引入拖拽库更轻。
+         */
+        moveTab(from: number, to: number) {
+            if (from === to || from < 0 || to < 0) return;
+            const len = this.tabs.length;
+            if (from >= len || to >= len) return;
+            const [item] = this.tabs.splice(from, 1);
+            this.tabs.splice(to, 0, item);
+        },
     },
     persist: {
         key: "bee-tabs",

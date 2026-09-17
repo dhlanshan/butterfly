@@ -74,7 +74,7 @@ const applyThemeColor = (color: string) => {
  * - isMobile：窗口宽度小于阈值（自动折叠）
  * - collapsed：最终是否折叠
  * - isDark：黑夜模式
- * - 界面设置：showBreadcrumb / showTabs / showFooter / menuAccordion
+ * - 界面设置：showBreadcrumb / showTabs / showFooter / menuAccordion / tabDrag
  * - 菜单布局：menuLayout
  * - 主题设置：themeColor / colorWeak / greyMode / sidebarDark / pageTransition / tabStyle
  * - 水印设置：watermark
@@ -90,6 +90,8 @@ export const useSettingsStore = defineStore("settings", () => {
     const showTabs = ref(true);
     const showFooter = ref(false);
     const menuAccordion = ref(false);
+    /** 页签拖动：关闭时标签不可拖；打开后可拖拽更换顺序（默认关） */
+    const tabDrag = ref(false);
 
     // 菜单布局模式
     const menuLayout = ref<MenuLayout>("side");
@@ -194,6 +196,7 @@ export const useSettingsStore = defineStore("settings", () => {
         showTabs,
         showFooter,
         menuAccordion,
+        tabDrag,
         menuLayout,
         // 主题设置
         themeColor,
@@ -223,6 +226,7 @@ export const useSettingsStore = defineStore("settings", () => {
             "showTabs",
             "showFooter",
             "menuAccordion",
+            "tabDrag",
             "menuLayout",
             "themeColor",
             "colorWeak",

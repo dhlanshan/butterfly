@@ -43,9 +43,88 @@ watch(
 
 /* ---------- 点击标签跳转 ---------- */
 const handleClick = (tab: any) => {
+    // 刚拖过则吞掉随后的 click，避免松手又跳一次路由
+    if (skipTabClick) {
+        skipTabClick = false;
+        return;
+    }
     if (route.path !== tab.path) {
         router.push(tab.fullPath || tab.path);
     }
+};
+
+/* ---------- 页签拖拽换位（仅 settings.tabDrag 开启时） ---------- */
+// 被拖标签相对「当前槽位」移动超过自身一半宽度，就和相邻项换位；换完把槽位原点挪到新位置，可连续换。
+const dragFrom = ref(-1);
+// 松手后 :hover 还停在旧槽位；先把悬停钉在落下的标签上，指针真正移动后再交给原生 hover
+const dropHoverIndex = ref(-1);
+let skipTabClick = false;
+let dragOffsetX = 0;
+let dragWidth = 0;
+let slotOriginLeft = 0;
+let lastDragX = 0;
+let lastDragY = 0;
+let onDropHoverPointerMove: ((e: PointerEvent) => void) | null = null;
+
+const stopDropHoverWatch = () => {
+    if (!onDropHoverPointerMove) return;
+    window.removeEventListener("pointermove", onDropHoverPointerMove);
+    onDropHoverPointerMove = null;
+};
+
+const onTabDragStart = (index: number, e: DragEvent) => {
+    stopDropHoverWatch();
+    dropHoverIndex.value = -1;
+    dragFrom.value = index;
+    skipTabClick = true;
+    lastDragX = e.clientX;
+    lastDragY = e.clientY;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    dragOffsetX = e.clientX - rect.left;
+    dragWidth = rect.width || 80;
+    slotOriginLeft = rect.left;
+    const dt = e.dataTransfer;
+    if (!dt) return;
+    dt.effectAllowed = "move";
+    dt.setData("text/plain", String(index));
+};
+
+const onTabsDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    lastDragX = e.clientX;
+    lastDragY = e.clientY;
+    const from = dragFrom.value;
+    if (from < 0 || !scrollRef.value) return;
+    const ghostLeft = e.clientX - dragOffsetX;
+    const delta = ghostLeft - slotOriginLeft;
+    const half = dragWidth / 2;
+    const items = scrollRef.value.querySelectorAll(".tab-item");
+    if (delta > half && from < items.length - 1) {
+        const to = from + 1;
+        slotOriginLeft = items[to].getBoundingClientRect().left;
+        tabsStore.moveTab(from, to);
+        dragFrom.value = to;
+    } else if (delta < -half && from > 0) {
+        const to = from - 1;
+        slotOriginLeft = items[to].getBoundingClientRect().left;
+        tabsStore.moveTab(from, to);
+        dragFrom.value = to;
+    }
+};
+
+const onTabDragEnd = () => {
+    const dropped = dragFrom.value;
+    dragFrom.value = -1;
+    if (dropped < 0) return;
+    dropHoverIndex.value = dropped;
+    stopDropHoverWatch();
+    onDropHoverPointerMove = (e: PointerEvent) => {
+        if (Math.abs(e.clientX - lastDragX) < 3 && Math.abs(e.clientY - lastDragY) < 3) return;
+        dropHoverIndex.value = -1;
+        stopDropHoverWatch();
+    };
+    window.addEventListener("pointermove", onDropHoverPointerMove);
 };
 
 /* ---------- 关闭标签 ---------- */
@@ -184,6 +263,7 @@ onUnmounted(() => {
     scrollRO?.disconnect();
     scrollRO = null;
     scrollRef.value?.removeEventListener("scroll", updateScrollState);
+    stopDropHoverWatch();
 });
 
 watch(() => tabs.value.length, () => nextTick(updateScrollState));
@@ -191,7 +271,10 @@ watch(activePath, () => scrollActiveIntoView());
 </script>
 
 <template>
-  <div class="tabs-bar" :class="'is-tab-' + settingsStore.tabStyle">
+  <div
+      class="tabs-bar"
+      :class="['is-tab-' + settingsStore.tabStyle, { 'is-tab-drag': settingsStore.tabDrag, 'is-tab-dragging': dragFrom >= 0 || dropHoverIndex >= 0 }]"
+  >
     <!-- 向左滚动：仅标签展示不全时显示；已到最左则禁用 -->
     <div
         v-if="needScroll"
@@ -202,25 +285,34 @@ watch(activePath, () => scrollActiveIntoView());
       <el-icon :size="16"><ArrowLeft/></el-icon>
     </div>
     <!-- 左侧标签滚动区 -->
-    <div ref="scrollRef" class="tabs-scroll">
-      <div class="tabs-inner">
+    <div
+        ref="scrollRef"
+        class="tabs-scroll"
+        @dragover="onTabsDragOver"
+        @drop.prevent
+    >
+      <TransitionGroup name="tab-flip" tag="div" class="tabs-inner">
         <div
-            v-for="tab in tabs"
+            v-for="(tab, index) in tabs"
             :key="tab.path"
             class="tab-item"
-            :class="{ active: tab.path === activePath }"
+            :class="{ active: tab.path === activePath, 'is-dragging': dragFrom === index, 'is-drag-hover': dragFrom === index || dropHoverIndex === index }"
+            :draggable="settingsStore.tabDrag"
             @click="handleClick(tab)"
+            @dragstart="onTabDragStart(index, $event)"
+            @dragend="onTabDragEnd"
         >
           <span class="tab-title">{{ $t(`menu.${getTitle(tab)}`) }}</span>
           <el-icon
               v-if="!tab.affix"
               class="tab-close"
               @click="handleClose(tab.path, $event)"
+              @dragstart.prevent.stop
           >
             <Close/>
           </el-icon>
         </div>
-      </div>
+      </TransitionGroup>
     </div>
     <!-- 向右滚动：仅标签展示不全时显示；已到最右则禁用 -->
     <div
@@ -324,6 +416,11 @@ watch(activePath, () => scrollActiveIntoView());
     white-space: nowrap;
   }
 
+  /* 换位 FLIP：被挤开的标签平滑滑过去；正在拖的那项立刻落位，不跟拖影抢动画 */
+  .tab-flip-move:not(.is-dragging) {
+    transition: transform 0.22s ease;
+  }
+
   .tab-item {
     position: relative;
     display: inline-flex;
@@ -337,6 +434,19 @@ watch(activePath, () => scrollActiveIntoView());
     border-radius: 0;
     cursor: pointer;
     transition: color 0.2s;
+
+    /* 拖着走时：真标签留在栏里，左右虚线标出落点；半透明影子由浏览器拖影提供 */
+    &.is-dragging::before {
+      content: "";
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 0;
+      right: 0;
+      border-left: 1px dashed var(--el-color-primary);
+      border-right: 1px dashed var(--el-color-primary);
+      pointer-events: none;
+    }
 
     &:hover {
       color: var(--el-color-primary);
@@ -387,6 +497,26 @@ watch(activePath, () => scrollActiveIntoView());
     }
   }
 
+  /* 开启页签拖动后：抓手光标提示可拖 */
+  &.is-tab-drag .tab-item {
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  /* 拖动中：关闭钮跟被拖项走，旧槽位邻居不要因 :hover 再亮出来 */
+  &.is-tab-dragging .tab-item {
+    &:not(.is-drag-hover):not(.active):hover .tab-close {
+      opacity: 0;
+    }
+
+    &.is-drag-hover:not(.active) .tab-close {
+      opacity: 1;
+    }
+  }
+
   .tabs-actions {
     display: flex;
     align-items: center;
@@ -419,9 +549,7 @@ watch(activePath, () => scrollActiveIntoView());
   /* ---------- 卡片：矮圆角块在栏内垂直居中；未选中浅灰底，选中浅主题色 ---------- */
   &.is-tab-card {
     .tabs-inner {
-      align-items: center;
       gap: 6px;
-      padding: 0 12px;
     }
 
     .tab-item {
@@ -464,7 +592,8 @@ watch(activePath, () => scrollActiveIntoView());
       color: var(--el-text-color-regular);
       -webkit-mask-box-image: $chrome-mask 12 27 15 fill;
 
-      &:hover {
+      &:hover,
+      &.is-drag-hover:not(.active) {
         z-index: 2;
         background-color: var(--el-fill-color);
       }
@@ -478,6 +607,12 @@ watch(activePath, () => scrollActiveIntoView());
           display: none;
         }
       }
+    }
+
+    /* 拖着不松手换向时，光标还在旧槽位上，邻居不要再亮悬停底 */
+    &.is-tab-dragging .tab-item:not(.is-drag-hover):not(.active):hover {
+      z-index: 1;
+      background-color: transparent;
     }
   }
 }
