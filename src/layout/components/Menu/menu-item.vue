@@ -55,7 +55,9 @@ const padLeft = computed(() =>
         :style="{ paddingLeft: padLeft }"
     >
       <MenuIcon :svg-icon="item.meta.svgIcon" :icon="item.meta.icon" />
-      <span>{{ $t(`menu.${item.meta.title}`) }}</span>
+      <template #title>
+        <span>{{ $t(`menu.${item.meta.title}`) }}</span>
+      </template>
     </el-menu-item>
   </template>
 </template>

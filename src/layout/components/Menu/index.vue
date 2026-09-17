@@ -86,6 +86,12 @@ const darkColors = {
     padding: 0 !important;
   }
 
+  /* 叶子项折叠后包在 tooltip 触发层里，EP 默认左右 20px padding 会把图标挤偏 */
+  :deep(.el-menu-tooltip__trigger) {
+    padding: 0 !important;
+    justify-content: center;
+  }
+
   :deep(.el-menu-item .el-icon),
   :deep(.el-sub-menu__title .el-icon) {
     margin-right: 0;
@@ -135,14 +141,25 @@ const darkColors = {
 }
 </style>
 
-<!-- 折叠后子菜单 teleport 到 body，必须非 scoped -->
+<!-- 折叠后弹出层 teleport 到 body，必须非 scoped -->
 <style lang="scss">
-.bee-menu-popup {
+/* 叶子标题气泡：跟 EP dark tooltip，不要清背景 */
+.bee-menu-popup.el-popper.is-dark {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* 带子菜单的弹出层：透明外壳 + 圆角卡片 */
+.bee-menu-popup:has(.el-menu--popup) {
   padding: 0 !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+}
 
+.bee-menu-popup {
   .el-menu--popup {
     position: relative;
     min-width: 168px;
