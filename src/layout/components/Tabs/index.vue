@@ -185,12 +185,78 @@ const toggleContentFullscreen = () => {
     document.documentElement.classList.toggle("content-fullscreen", isContentFullscreen.value);
 };
 
-/* ---------- 标签操作下拉 ---------- */
+/* ---------- 标签操作菜单（右侧按钮 / 标签右键共用 opsItems） ---------- */
+const opsMenuPath = ref<string | null>(null);
+const ctxVisible = ref(false);
+const ctxPos = ref({x: 0, y: 0});
+const ctxMenuRef = ref<HTMLElement | null>(null);
+const tabOpsRef = ref<{ handleClose: () => void } | null>(null);
+
+const menuPath = computed(() => opsMenuPath.value || activePath.value);
+const menuIdx = computed(() => tabs.value.findIndex(t => t.path === menuPath.value));
+const canReload = computed(() => menuPath.value === activePath.value);
+
+const closeCtxMenu = () => {
+    ctxVisible.value = false;
+};
+
+const onTabContextMenu = (e: MouseEvent, tab: { path: string }) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dragFrom.value >= 0) return;
+    tabOpsRef.value?.handleClose();
+    opsMenuPath.value = tab.path;
+    ctxPos.value = {x: e.clientX, y: e.clientY};
+    ctxVisible.value = true;
+    nextTick(() => {
+        const menu = ctxMenuRef.value;
+        if (!menu) return;
+        const r = menu.getBoundingClientRect();
+        let {x, y} = ctxPos.value;
+        if (x + r.width > window.innerWidth - 4) x = window.innerWidth - r.width - 4;
+        if (y + r.height > window.innerHeight - 4) y = window.innerHeight - r.height - 4;
+        ctxPos.value = {x: Math.max(4, x), y: Math.max(4, y)};
+    });
+};
+
+/** 右键不启动 HTML5 拖拽，避免拖动手势抢走 contextmenu */
+const onTabMouseDown = (e: MouseEvent) => {
+    const el = e.currentTarget as HTMLElement;
+    el.draggable = settingsStore.tabDrag && e.button === 0;
+};
+
+const onOpsBtnClick = () => {
+    closeCtxMenu();
+    opsMenuPath.value = activePath.value;
+};
+
+const onOpsVisible = (vis: boolean) => {
+    // 右键已把目标写成非当前标签后，汉堡关闭回调会晚到；此时不能清，否则刷新又变成可用
+    if (!vis && !ctxVisible.value) opsMenuPath.value = null;
+};
+
+const onCtxItem = (cmd: string, disabled: boolean) => {
+    if (disabled) return;
+    closeCtxMenu();
+    handleCommand(cmd);
+};
+
+const onWinMouseDown = (e: MouseEvent) => {
+    if (!ctxVisible.value) return;
+    if (ctxMenuRef.value?.contains(e.target as Node)) return;
+    closeCtxMenu();
+};
+
+const onWinKeydown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") closeCtxMenu();
+};
+
 const handleCommand = (cmd: string) => {
-    const path = activePath.value;
+    const path = opsMenuPath.value || activePath.value;
     let next: string | null = null;
     switch (cmd) {
         case "reload":
+            if (path !== activePath.value) return;
             handleRefresh();
             return;
         case "close-current":
@@ -198,12 +264,15 @@ const handleCommand = (cmd: string) => {
             break;
         case "close-left-side":
             tabsStore.closeLeft(path);
+            if (!tabs.value.some(t => t.path === route.path)) next = path;
             break;
         case "close-right-side":
             tabsStore.closeRight(path);
+            if (!tabs.value.some(t => t.path === route.path)) next = path;
             break;
         case "close-other":
             tabsStore.closeOther(path);
+            if (route.path !== path) next = path;
             break;
         case "close-all":
             next = tabsStore.closeAll();
@@ -215,28 +284,37 @@ const handleCommand = (cmd: string) => {
     if (next) router.push(next);
 };
 
-/* ---------- 各操作的可用性（用于禁用不可执行的项） ---------- */
-// 当前激活标签索引
-const activeIdx = computed(() => tabs.value.findIndex(t => t.path === activePath.value));
-// 当前激活标签是否可关闭（非固定 affix）
+/* ---------- 各操作的可用性（相对当前菜单针对的那一项） ---------- */
 const canCloseCurrent = computed(() => {
-    const t = tabs.value[activeIdx.value];
+    const t = tabs.value[menuIdx.value];
     return !!t && !t.affix;
 });
-// 左侧是否存在可关闭标签（非 affix）
 const canCloseLeft = computed(() =>
-    tabs.value.some((t, i) => i < activeIdx.value && !t.affix)
+    tabs.value.some((t, i) => i < menuIdx.value && !t.affix)
 );
-// 右侧是否存在可关闭标签
 const canCloseRight = computed(() =>
-    tabs.value.some((t, i) => i > activeIdx.value && !t.affix)
+    tabs.value.some((t, i) => i > menuIdx.value && !t.affix)
 );
-// 是否存在其他可关闭标签（除当前外还有非 affix）
 const canCloseOther = computed(() =>
-    tabs.value.some(t => !t.affix && t.path !== activePath.value)
+    tabs.value.some(t => !t.affix && t.path !== menuPath.value)
 );
-// 是否存在任何可关闭标签
 const canCloseAll = computed(() => tabs.value.some(t => !t.affix));
+
+const opsItems = computed(() => [
+    {cmd: "reload", icon: Refresh, labelKey: "system.reload", disabled: !canReload.value, divided: false},
+    {cmd: "close-current", icon: Close, labelKey: "system.close-current-tab", disabled: !canCloseCurrent.value, divided: true},
+    {cmd: "close-left-side", icon: Back, labelKey: "system.close-left-tab", disabled: !canCloseLeft.value, divided: false},
+    {cmd: "close-right-side", icon: Right, labelKey: "system.close-right-tab", disabled: !canCloseRight.value, divided: true},
+    {cmd: "close-other", icon: IconSwitch, labelKey: "system.close-other-tab", disabled: !canCloseOther.value, divided: false},
+    {cmd: "close-all", icon: Minus, labelKey: "system.close-all-tab", disabled: !canCloseAll.value, divided: true},
+    {
+        cmd: "content-fullscreen",
+        icon: isContentFullscreen.value ? Aim : FullScreen,
+        labelKey: isContentFullscreen.value ? "system.exit-content-fullscreen" : "system.content-fullscreen",
+        disabled: false,
+        divided: true,
+    },
+]);
 
 /* ---------- 标签标题：通过 routeTree 查找 meta.title ---------- */
 const getTitle = (tab: any) => {
@@ -284,6 +362,8 @@ const scrollActiveIntoView = () => {
 };
 
 onMounted(() => {
+    window.addEventListener("mousedown", onWinMouseDown, true);
+    window.addEventListener("keydown", onWinKeydown);
     const el = scrollRef.value;
     if (!el) return;
     scrollRO = new ResizeObserver(() => updateScrollState());
@@ -300,6 +380,8 @@ onUnmounted(() => {
     scrollRef.value?.removeEventListener("scroll", updateScrollState);
     stopDropHoverWatch();
     stopWinDragOver();
+    window.removeEventListener("mousedown", onWinMouseDown, true);
+    window.removeEventListener("keydown", onWinKeydown);
 });
 
 watch(() => tabs.value.length, () => nextTick(updateScrollState));
@@ -310,7 +392,7 @@ watch(activePath, () => scrollActiveIntoView());
   <div
       ref="barRef"
       class="tabs-bar"
-      :class="['is-tab-' + settingsStore.tabStyle, { 'is-tab-drag': settingsStore.tabDrag, 'is-tab-dragging': dragFrom >= 0 || dropHoverIndex >= 0 }]"
+      :class="['is-tab-' + settingsStore.tabStyle, { 'is-tab-dragging': dragFrom >= 0 || dropHoverIndex >= 0 }]"
   >
     <!-- 向左滚动：仅标签展示不全时显示；已到最左则禁用 -->
     <div
@@ -336,6 +418,8 @@ watch(activePath, () => scrollActiveIntoView());
             :class="{ active: tab.path === activePath, 'is-dragging': dragFrom === index, 'is-drag-hover': dragFrom === index || dropHoverIndex === index }"
             :draggable="settingsStore.tabDrag"
             @click="handleClick(tab)"
+            @mousedown="onTabMouseDown"
+            @contextmenu="onTabContextMenu($event, tab)"
             @dragstart="onTabDragStart(index, $event)"
             @dragend="onTabDragEnd"
         >
@@ -367,40 +451,48 @@ watch(activePath, () => scrollActiveIntoView());
         <el-icon :size="16"><Refresh/></el-icon>
         <el-tooltip :content="$t('system.refresh')" placement="bottom"/>
       </div>
-      <el-dropdown trigger="click" @command="handleCommand">
-        <div class="action-btn">
+      <el-dropdown ref="tabOpsRef" trigger="click" @command="handleCommand" @visible-change="onOpsVisible">
+        <div class="action-btn" @click="onOpsBtnClick">
           <el-icon :size="16"><IconMenu/></el-icon>
         </div>
         <template #dropdown>
           <el-dropdown-menu>
-            <!-- 重新加载 -->
-            <el-dropdown-item command="reload">
-              <el-icon><Refresh/></el-icon>{{ $t("system.reload") }}
-            </el-dropdown-item>
-            <el-dropdown-item divided command="close-current" :disabled="!canCloseCurrent">
-              <el-icon><Close/></el-icon>{{ $t("system.close-current-tab") }}
-            </el-dropdown-item>
-            <el-dropdown-item command="close-left-side" :disabled="!canCloseLeft">
-              <el-icon><Back/></el-icon>{{ $t("system.close-left-tab") }}
-            </el-dropdown-item>
-            <el-dropdown-item divided command="close-right-side" :disabled="!canCloseRight">
-              <el-icon><Right/></el-icon>{{ $t("system.close-right-tab") }}
-            </el-dropdown-item>
-            <el-dropdown-item command="close-other" :disabled="!canCloseOther">
-              <el-icon><IconSwitch/></el-icon>{{ $t("system.close-other-tab") }}
-            </el-dropdown-item>
-            <el-dropdown-item divided command="close-all" :disabled="!canCloseAll">
-              <el-icon><Minus/></el-icon>{{ $t("system.close-all-tab") }}
-            </el-dropdown-item>
-            <el-dropdown-item divided command="content-fullscreen">
-              <el-icon><component :is="isContentFullscreen ? Aim : FullScreen"/></el-icon>
-              {{ isContentFullscreen ? $t("system.exit-content-fullscreen") : $t("system.content-fullscreen") }}
+            <el-dropdown-item
+                v-for="it in opsItems"
+                :key="it.cmd"
+                :command="it.cmd"
+                :disabled="it.disabled"
+                :divided="it.divided"
+            >
+              <el-icon><component :is="it.icon"/></el-icon>{{ $t(it.labelKey) }}
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
     </div>
   </div>
+  <Teleport to="body">
+    <div
+        v-if="ctxVisible"
+        ref="ctxMenuRef"
+        class="el-dropdown__popper el-popper is-light is-pure tab-ctx-menu"
+        :style="{ left: ctxPos.x + 'px', top: ctxPos.y + 'px' }"
+        @contextmenu.prevent
+    >
+      <ul class="el-dropdown-menu">
+        <template v-for="it in opsItems" :key="it.cmd">
+          <li v-if="it.divided" role="separator" class="el-dropdown-menu__item--divided"/>
+          <li
+              class="el-dropdown-menu__item"
+              :class="{ 'is-disabled': it.disabled }"
+              @click="onCtxItem(it.cmd, it.disabled)"
+          >
+            <el-icon><component :is="it.icon"/></el-icon>{{ $t(it.labelKey) }}
+          </li>
+        </template>
+      </ul>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped lang="scss">
@@ -538,15 +630,6 @@ watch(activePath, () => scrollActiveIntoView());
     }
   }
 
-  /* 开启页签拖动后：抓手光标提示可拖 */
-  &.is-tab-drag .tab-item {
-    cursor: grab;
-
-    &:active {
-      cursor: grabbing;
-    }
-  }
-
   /* 拖动中：关闭钮跟被拖项走，旧槽位邻居不要因 :hover 再亮出来 */
   &.is-tab-dragging .tab-item {
     &:not(.is-drag-hover):not(.active):hover .tab-close {
@@ -673,5 +756,11 @@ watch(activePath, () => scrollActiveIntoView());
       background-color: transparent;
     }
   }
+}
+
+.tab-ctx-menu {
+  position: fixed;
+  z-index: 4000;
+  margin: 0;
 }
 </style>
