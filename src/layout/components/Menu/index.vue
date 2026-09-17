@@ -51,14 +51,26 @@ const darkColors = {
   overflow-y: auto;
   overflow-x: hidden;
   background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* 折叠动画时文字从光标下划过，禁止选中以免误选 */
+  user-select: none;
+
+  /* 内嵌子菜单同样用 gap，避免 item 上下 margin 在折叠动画里撑出跳动 */
+  :deep(.el-menu) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
 }
 
-/* 菜单项与子菜单标题：日/夜同一套盒模型，避免切主题时左右错位 */
+/* 菜单项与子菜单标题：只保留左右边距，上下间距交给 gap */
 :deep(.el-menu-item),
 :deep(.el-sub-menu__title) {
   height: 44px;
   line-height: 44px;
-  margin: 4px 8px;
+  margin: 0 8px;
   width: calc(100% - 16px);
   border-radius: 6px;
 }
