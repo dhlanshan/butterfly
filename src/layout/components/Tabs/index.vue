@@ -2,6 +2,7 @@
 import {useRouter, useRoute} from "vue-router";
 import {
     Refresh, Menu as IconMenu, Close, Back, Right, Switch as IconSwitch, Minus, FullScreen, Aim,
+    ArrowLeft, ArrowRight,
 } from "@element-plus/icons-vue";
 import {useTabsStoreHook} from "@/store/modules/tabs.ts";
 import {useRouteConfigStoreHook} from "@/store/modules/route-config.ts";
@@ -128,12 +129,80 @@ const getTitle = (tab: any) => {
     const node = findCategoryById(routeTree.value, "path", tab.path);
     return node?.meta?.title || tab.title;
 };
+
+/* ---------- 标签溢出滚动（左右按钮仅在展示不全时出现） ---------- */
+// 只量滚动容器：scrollWidth / clientWidth / scrollLeft，不对每个标签算位置（O(1)）。
+// ResizeObserver 听容器与内容宽度；scroll 用 passive 更新能否继续滚。卸载时断开，防泄漏。
+const scrollRef = ref<HTMLElement | null>(null);
+const needScroll = ref(false);
+const canScrollLeft = ref(false);
+const canScrollRight = ref(false);
+let scrollRO: ResizeObserver | null = null;
+
+const updateScrollState = () => {
+    const el = scrollRef.value;
+    if (!el) {
+        needScroll.value = false;
+        canScrollLeft.value = false;
+        canScrollRight.value = false;
+        return;
+    }
+    // 1px 容差，避免亚像素导致按钮闪烁
+    const overflow = el.scrollWidth > el.clientWidth + 1;
+    needScroll.value = overflow;
+    canScrollLeft.value = overflow && el.scrollLeft > 1;
+    canScrollRight.value = overflow && el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+};
+
+const scrollByPage = (dir: -1 | 1) => {
+    const el = scrollRef.value;
+    if (!el) return;
+    el.scrollBy({left: dir * el.clientWidth * 0.8, behavior: "smooth"});
+};
+
+const scrollActiveIntoView = () => {
+    nextTick(() => {
+        const el = scrollRef.value;
+        const active = el?.querySelector(".tab-item.active") as HTMLElement | null;
+        active?.scrollIntoView({inline: "nearest", block: "nearest", behavior: "smooth"});
+        updateScrollState();
+    });
+};
+
+onMounted(() => {
+    const el = scrollRef.value;
+    if (!el) return;
+    scrollRO = new ResizeObserver(() => updateScrollState());
+    scrollRO.observe(el);
+    const inner = el.querySelector(".tabs-inner");
+    if (inner) scrollRO.observe(inner);
+    el.addEventListener("scroll", updateScrollState, {passive: true});
+    updateScrollState();
+});
+
+onUnmounted(() => {
+    scrollRO?.disconnect();
+    scrollRO = null;
+    scrollRef.value?.removeEventListener("scroll", updateScrollState);
+});
+
+watch(() => tabs.value.length, () => nextTick(updateScrollState));
+watch(activePath, () => scrollActiveIntoView());
 </script>
 
 <template>
   <div class="tabs-bar">
+    <!-- 向左滚动：仅标签展示不全时显示；已到最左则禁用 -->
+    <div
+        v-if="needScroll"
+        class="tab-scroll-btn"
+        :class="{ 'is-disabled': !canScrollLeft }"
+        @click="canScrollLeft && scrollByPage(-1)"
+    >
+      <el-icon :size="16"><ArrowLeft/></el-icon>
+    </div>
     <!-- 左侧标签滚动区 -->
-    <div class="tabs-scroll">
+    <div ref="scrollRef" class="tabs-scroll">
       <div class="tabs-inner">
         <div
             v-for="tab in tabs"
@@ -152,6 +221,15 @@ const getTitle = (tab: any) => {
           </el-icon>
         </div>
       </div>
+    </div>
+    <!-- 向右滚动：仅标签展示不全时显示；已到最右则禁用 -->
+    <div
+        v-if="needScroll"
+        class="tab-scroll-btn"
+        :class="{ 'is-disabled': !canScrollRight }"
+        @click="canScrollRight && scrollByPage(1)"
+    >
+      <el-icon :size="16"><ArrowRight/></el-icon>
     </div>
 
     <!-- 右侧操作区 -->
@@ -204,6 +282,28 @@ const getTitle = (tab: any) => {
   /* 顶部边框由 Header 提供，这里只保留底部边框，避免双线变粗 */
   border-bottom: 1px solid #f0f0f0;
   background-color: var(--el-bg-color);
+
+  .tab-scroll-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 100%;
+    cursor: pointer;
+    color: var(--el-text-color-regular);
+    transition: color 0.2s, background-color 0.2s;
+
+    &:hover:not(.is-disabled) {
+      color: var(--el-color-primary);
+      background-color: var(--el-fill-color-light);
+    }
+
+    &.is-disabled {
+      color: var(--el-text-color-disabled);
+      cursor: not-allowed;
+    }
+  }
 
   .tabs-scroll {
     flex: 1;
