@@ -82,12 +82,21 @@ const darkColors = {
   padding-left: var(--bee-menu-pad, 12px) !important;
 }
 
-/* 图标与文字对齐：折叠态依赖 .el-icon 作为唯一可见图标位 */
+/* 左侧菜单图标：不要写到展开箭头上，否则箭头会被撑到 20px 且垂直偏一截 */
 :deep(.el-menu-item .el-icon),
-:deep(.el-sub-menu__title .el-icon) {
+:deep(.el-sub-menu__title .el-icon:not(.el-sub-menu__icon-arrow)) {
   width: 18px;
   font-size: 20px;
   margin-right: 8px;
+}
+
+/* 子菜单展开箭头：保持 EP 原尺寸，和 44px 行高、文字、图标同一垂直中线 */
+:deep(.el-sub-menu__icon-arrow) {
+  width: 12px;
+  font-size: 12px;
+  margin-top: -6px;
+  margin-right: 0;
+  right: 10px;
 }
 
 /* 折叠：64px 仅图标；去掉展开态的图标右边距，让图标在栏内左右居中 */
@@ -230,11 +239,19 @@ const darkColors = {
     border-radius: 6px;
   }
 
-  .el-menu-item .el-icon,
-  .el-sub-menu__title .el-icon {
+  .el-menu-item .el-icon:not(.el-sub-menu__icon-arrow),
+  .el-sub-menu__title .el-icon:not(.el-sub-menu__icon-arrow) {
     width: 18px;
     margin-right: 8px;
     font-size: 20px;
+  }
+
+  .el-sub-menu__icon-arrow {
+    width: 12px;
+    font-size: 12px;
+    margin-top: -6px;
+    margin-right: 0;
+    right: 10px;
   }
 
   .el-menu-item.is-active {
