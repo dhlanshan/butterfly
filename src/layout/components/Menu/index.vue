@@ -92,14 +92,14 @@ const darkColors = {
   }
 }
 
-/* 菜单项与子菜单标题：只保留左右边距，上下间距交给 gap */
+/* 菜单项通栏：悬浮/选中底左右顶到侧栏边缘 */
 :deep(.el-menu-item),
 :deep(.el-sub-menu__title) {
   height: 44px;
   line-height: 44px;
-  margin: 0 8px;
-  width: calc(100% - 16px);
-  border-radius: 6px;
+  margin: 0;
+  width: 100%;
+  border-radius: 0;
 }
 
 /* 子菜单标题读取递归写入的缩进，和叶子项同一套层级 */
