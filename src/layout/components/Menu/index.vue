@@ -140,7 +140,8 @@ const darkColors = {
 /* 叶子项与带子菜单的标题悬停同一套底色 */
 :deep(.el-menu-item:not(.is-active):hover),
 :deep(.el-sub-menu__title:hover) {
-  background-color: var(--el-menu-hover-bg-color);
+  background-color: #f5f7fa !important;
+  color: rgba(0, 0, 0, 0.85) !important;
 }
 
 /*
@@ -159,7 +160,7 @@ const darkColors = {
   }
   :deep(.el-menu-item:hover),
   :deep(.el-sub-menu__title:hover) {
-    background-color: #263445 !important;
+    background-color: rgb(21, 25, 37) !important;
   }
 }
 
@@ -174,8 +175,16 @@ const darkColors = {
 
   :deep(.el-menu-item:not(.is-active):hover),
   :deep(.el-sub-menu__title:hover) {
-    background-color: var(--el-fill-color-light) !important;
+    background-color: rgb(21, 25, 37) !important;
+    color: #bfcbd9;
   }
+}
+
+/* 子菜单（含更深层）悬浮：浅蓝底，字保持深色 */
+:deep(.el-menu--inline .el-menu-item:not(.is-active):hover),
+:deep(.el-menu--inline .el-sub-menu__title:hover) {
+  background-color: #f0f5ff !important;
+  color: rgba(0, 0, 0, 0.85) !important;
 }
 </style>
 
@@ -250,8 +259,10 @@ const darkColors = {
     line-height: 36px !important;
     margin: 0 !important;
     width: auto !important;
-    padding: 0 12px !important;
+    padding: 0 20px !important;
     border-radius: 6px;
+    font-weight: 400;
+    color: var(--el-text-color-regular);
   }
 
   .el-menu-item .el-icon:not(.el-sub-menu__icon-arrow),
@@ -276,7 +287,8 @@ const darkColors = {
 
   .el-menu-item:not(.is-active):hover,
   .el-sub-menu__title:hover {
-    background-color: var(--el-fill-color-light);
+    background-color: #f0f5ff;
+    color: rgba(0, 0, 0, 0.85);
   }
 }
 </style>

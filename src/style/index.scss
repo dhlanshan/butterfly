@@ -2,9 +2,12 @@
 
 body {
   background-color: var(--el-bg-color-page);
-  /* 若依同款系统无衬线字体栈（苹方 / 微软雅黑），无需引入字体文件 */
+  /* 若依同款：苹方 / 微软雅黑 + 灰度抗锯齿，汉字不会那么黑、那么粗 */
   font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
-               "Microsoft YaHei", "Arial", sans-serif;
+               "Microsoft YaHei", "微软雅黑", "Arial", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* -------------------------------------------------------------------------- */

@@ -42,6 +42,7 @@ const currentLang = ref<string>(locale.value);
 const handleLang = (val: string) => {
     currentLang.value = val;
     locale.value = val;
+    document.documentElement.lang = val;
     // 同步持久化到 theme-config（与 lang/index.ts 读取保持一致）
     const store = localStorage.getItem("theme-config");
     const cfg = store ? JSON.parse(store) : {};

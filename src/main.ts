@@ -27,6 +27,7 @@ app.use(i18n);
 // 初始化暗黑模式：根据持久化的 isDark 给 html 加 dark class
 const settingsStore = useSettingsStoreHook();
 document.documentElement.classList.toggle("dark", settingsStore.isDark);
+document.documentElement.lang = i18n.global.locale.value;
 
 // 立即挂载应用，不等待非关键依赖加载
 app.mount("#app");
