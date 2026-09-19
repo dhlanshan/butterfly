@@ -28,30 +28,44 @@ const darkColors = {
 </script>
 
 <template>
-  <el-menu
-      :default-active="$route.path"
-      :collapse="props.collapse"
-      :collapse-transition="false"
-      :unique-opened="settingsStore.menuAccordion"
-      :class="{ 'is-menu-dark': props.dark, 'is-menu-night': settingsStore.isDark }"
-      :background-color="props.dark ? darkColors.background : undefined"
-      :text-color="props.dark ? darkColors.textColor : undefined"
-      :active-text-color="props.dark ? darkColors.activeTextColor : undefined"
-      popper-class="bee-menu-popup"
-      :show-timeout="100"
-      :hide-timeout="100"
-      @select="handleMenuSelect"
-  >
-    <MenuItem :route-tree="props.routeTree" :collapse="props.collapse" />
-  </el-menu>
+  <!-- 悬浮滚动条：滑块叠在菜单上，不占用侧栏宽度 -->
+  <el-scrollbar class="menu-scroll">
+    <el-menu
+        :default-active="$route.path"
+        :collapse="props.collapse"
+        :collapse-transition="false"
+        :unique-opened="settingsStore.menuAccordion"
+        :class="{ 'is-menu-dark': props.dark, 'is-menu-night': settingsStore.isDark }"
+        :background-color="props.dark ? darkColors.background : undefined"
+        :text-color="props.dark ? darkColors.textColor : undefined"
+        :active-text-color="props.dark ? darkColors.activeTextColor : undefined"
+        popper-class="bee-menu-popup"
+        :show-timeout="100"
+        :hide-timeout="100"
+        @select="handleMenuSelect"
+    >
+      <MenuItem :route-tree="props.routeTree" :collapse="props.collapse" />
+    </el-menu>
+  </el-scrollbar>
 </template>
 
 <style scoped lang="scss">
+.menu-scroll {
+  height: 100%;
+
+  :deep(.el-scrollbar__bar.is-vertical) {
+    width: 6px;
+    right: 2px;
+  }
+
+  :deep(.el-scrollbar__thumb) {
+    border-radius: 6px;
+    background-color: rgba(144, 147, 153, 0.45);
+  }
+}
+
 .el-menu {
   border: 0;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
   background-color: transparent;
   display: flex;
   flex-direction: column;
