@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 /** 与父级同一套左右 margin；每层只把内容右移 15px（折叠弹出层除外） */
 const padLeft = computed(() =>
-  `${12 + (props.collapse ? 0 : props.level) * 15}px`
+  `${20 + (props.collapse ? 0 : props.level) * 20}px`
 );
 
 </script>

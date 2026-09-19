@@ -121,7 +121,7 @@ const darkColors = {
   font-size: 12px;
   margin-top: -6px;
   margin-right: 0;
-  right: 10px;
+  right: 20px;
 }
 
 /* 折叠：64px 仅图标；去掉展开态的图标右边距，让图标在栏内左右居中 */
