@@ -65,6 +65,17 @@ const darkColors = {
     flex-direction: column;
     gap: 4px;
   }
+
+  /*
+   * 层级底色：一级跟侧栏；二级及以下（含子级）统一一块底。
+   * 只改 el-menu--inline（折叠弹出层是 --popup，不受影响）。
+   * !important：深色侧栏时 EP 会把 background-color 写成行内 #304156。
+   */
+  --bee-menu-child-bg: #f9f9f9;
+
+  :deep(.el-menu--inline) {
+    background-color: var(--bee-menu-child-bg) !important;
+  }
 }
 
 /* 菜单项与子菜单标题：只保留左右边距，上下间距交给 gap */
@@ -140,6 +151,8 @@ const darkColors = {
  *   右侧竖条与背景在这里用 :deep 覆盖。
  */
 .is-menu-dark {
+  --bee-menu-child-bg: #1f2d3d;
+
   :deep(.el-menu-item.is-active) {
     background-color: #263445 !important;
     border-right: 3px solid #409eff;
@@ -152,6 +165,8 @@ const darkColors = {
 
 /* 夜模式只改选中/悬停色，不再改 margin/width */
 .is-menu-night {
+  --bee-menu-child-bg: var(--el-fill-color);
+
   :deep(.el-menu-item.is-active) {
     background-color: var(--el-color-primary) !important;
     color: #fff !important;
