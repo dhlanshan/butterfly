@@ -6,11 +6,12 @@ import {useRoutingMethod} from "@/hooks/useRoutingMethod.ts";
 import {hasMixSidebar} from "@/hooks/useMenuLayout.ts";
 import {useRoute} from "vue-router";
 import {storeToRefs} from "pinia";
+import MenuIcon from "@/layout/components/Menu/menu-icon.vue";
 
 const settingsStore = useSettingsStoreHook();
 const {routeTree} = storeToRefs(useRouteConfigStoreHook());
 const route = useRoute();
-const {getAllParentRoute} = useRoutingMethod();
+const {getAllParentRoute, handleMenuSelect} = useRoutingMethod();
 
 /**
  * 折叠按钮是否展示：必须与 Aside 的 showAside 条件一致，否则会出现
@@ -33,6 +34,45 @@ const breadcrumbs = computed(() => {
     // 过滤掉没有 title 的节点（如根 layout）
     return list.filter((item: any) => item?.meta?.title);
 });
+
+/* ---------- 面包屑父菜单下拉开始 ----------
+ * 控制位置：Header 面包屑中带 children 的父级菜单。
+ * 交互效果：鼠标悬浮父级面包屑时，下方弹出该父级的直接子菜单列表。
+ * 点击子菜单时复用 handleMenuSelect，保证内部页、iframe 外链、纯外链都和侧边栏点击行为一致。
+ * ---------- 面包屑父菜单下拉结束 ---------- */
+const isVisibleBreadcrumbMenu = (item: Menu.MenuOptions) =>
+    !item.meta?.hide && (item.meta?.type === 1 || item.meta?.type === 2);
+
+const getBreadcrumbChildren = (item: Menu.MenuOptions): Menu.MenuOptions[] => {
+    const children = item.children;
+    if (!Array.isArray(children)) return [];
+    return children.filter(isVisibleBreadcrumbMenu);
+};
+
+const hasBreadcrumbDropdown = (item: Menu.MenuOptions) => getBreadcrumbChildren(item).length > 0;
+
+const getBreadcrumbTargetPath = (item: Menu.MenuOptions): string => {
+    if (item.meta?.type === 2) return item.path;
+    for (const child of getBreadcrumbChildren(item)) {
+        const path = getBreadcrumbTargetPath(child);
+        if (path) return path;
+    }
+    return item.path;
+};
+
+const isBreadcrumbChildDisabled = (item: Menu.MenuOptions) =>
+    !!item.meta?.disable || !getBreadcrumbTargetPath(item);
+
+const handleBreadcrumbCommand = (path: string) => {
+    if (!path) return;
+    handleMenuSelect(path);
+};
+
+const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
+    if (hasBreadcrumbDropdown(item)) return undefined;
+    if (item.meta.type === 2 && index !== breadcrumbs.value.length - 1) return {path: item.path};
+    return undefined;
+};
 </script>
 
 <template>
@@ -73,9 +113,32 @@ const breadcrumbs = computed(() => {
           v-for="(item, index) in breadcrumbs"
           :key="item.path"
           :class="{ 'is-current': index === breadcrumbs.length - 1 }"
-          :to="(item.meta.type === 2 && index !== breadcrumbs.length - 1) ? { path: item.path } : undefined"
+          :to="getBreadcrumbItemTo(item, index)"
       >
-        {{ $t(`menu.${item.meta.title}`) }}
+        <el-dropdown
+            v-if="hasBreadcrumbDropdown(item)"
+            trigger="hover"
+            popper-class="breadcrumb-menu-popper"
+            @command="handleBreadcrumbCommand"
+        >
+          <span class="breadcrumb-trigger">
+            {{ $t(`menu.${item.meta.title}`) }}
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item
+                  v-for="child in getBreadcrumbChildren(item)"
+                  :key="child.path"
+                  :command="getBreadcrumbTargetPath(child)"
+                  :disabled="isBreadcrumbChildDisabled(child)"
+              >
+                <MenuIcon :svg-icon="child.meta.svgIcon" :icon="child.meta.icon"/>
+                <span>{{ $t(`menu.${child.meta.title}`) }}</span>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        <span v-else>{{ $t(`menu.${item.meta.title}`) }}</span>
       </el-breadcrumb-item>
     </el-breadcrumb>
   </div>
@@ -168,8 +231,49 @@ const breadcrumbs = computed(() => {
       font-weight: 600;
       color: var(--el-text-color-primary);
     }
+
+    /* ==================== 面包屑父菜单悬浮入口开始 ====================
+     * 控制位置：有子菜单的面包屑文字，也就是可悬浮弹出子菜单列表的父级项。
+     * 修改这里会影响：父级面包屑的 hover 手势和文字排列。
+     */
+    .breadcrumb-trigger {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      transition: color 0.2s;
+
+      &:hover {
+        color: var(--el-color-primary);
+      }
+    }
+    /* ==================== 面包屑父菜单悬浮入口结束 ==================== */
   }
   /* ==================== 面包屑区域结束 ==================== */
 }
 /* ==================== Header 左侧区域结束 ==================== */
+</style>
+
+<style lang="scss">
+/* ==================== 面包屑子菜单弹出层开始 ====================
+ * 控制位置：面包屑父菜单 hover 后 teleport 到 body 的 Element Plus dropdown。
+ * 为什么写非 scoped：el-dropdown 的 popper 默认挂到 body，scoped 样式无法稳定命中。
+ * 修改这里会影响：弹出子菜单的最小宽度、菜单项高度、图标大小、hover 视觉。
+ */
+.breadcrumb-menu-popper {
+  .el-dropdown-menu {
+    min-width: 168px;
+  }
+
+  .el-dropdown-menu__item {
+    height: 34px;
+    line-height: 34px;
+
+    .el-icon {
+      width: 18px;
+      margin-right: 8px;
+      font-size: 16px;
+    }
+  }
+}
+/* ==================== 面包屑子菜单弹出层结束 ==================== */
 </style>
