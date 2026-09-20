@@ -87,11 +87,11 @@ const bannerTitle = "JetBrains"
   /* ==================== Logo 标题文字结束 ==================== */
 
   /* ==================== 深色侧边栏 Logo 标题开始 ====================
-   * 控制位置：外部给 Logo 组件加 .dark class 时的标题颜色。
+   * 控制位置：外部给 Logo 组件根节点 .logo_head 加 .dark class 时的标题颜色。
    * 启用来源：Aside/index.vue 中 sidebarDark && !isDark 时传入。
    */
-  .dark {
-    color: #ffffff;
+  &.dark .logo_title {
+    color: #bfcbd9;
   }
   /* ==================== 深色侧边栏 Logo 标题结束 ==================== */
 }

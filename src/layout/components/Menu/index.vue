@@ -230,7 +230,6 @@ const darkColors = {
 :deep(.el-menu-item:not(.is-active):hover),
 :deep(.el-sub-menu__title:hover) {
   background-color: #f5f7fa !important;
-  //color: rgba(0, 0, 0, 0.85) !important;
 }
 /* ==================== 浅色侧边栏悬浮态结束 ==================== */
 
@@ -252,7 +251,7 @@ const darkColors = {
  */
 .is-menu-dark {
   /* 深色侧边栏下，内嵌展开子菜单的背景色 */
-  --bee-menu-child-bg: rgb(26, 31, 46);
+  --bee-menu-child-bg: rgb(21 27 37);
 
   /* 深色侧边栏下，当前选中叶子菜单的背景色覆盖 */
   :deep(.el-menu-item.is-active) {
