@@ -309,7 +309,6 @@ const darkColors = {
 :deep(.el-menu--inline .el-menu-item:not(.is-active):hover),
 :deep(.el-menu--inline .el-sub-menu__title:hover) {
   background-color: #f0f5ff !important;
-  //color: rgba(0, 0, 0, 0.85) !important;
 }
 /* ==================== 浅色内嵌子菜单悬浮态结束 ==================== */
 </style>
