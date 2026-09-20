@@ -5,8 +5,9 @@ import {Check} from "@element-plus/icons-vue";
 const settingsStore = useSettingsStoreHook();
 
 const visible = ref(false);
+const activePreferenceTab = ref("frameworkLayout");
 
-/** 打开系统设置抽屉：由 HeaderRight 通过 ref 调用 */
+/** 打开偏好设置抽屉：由 HeaderRight 通过 ref 调用 */
 const open = () => {
     visible.value = true;
 };
@@ -59,159 +60,173 @@ const tabStyleOptions = [
 <template>
   <el-drawer
       v-model="visible"
-      :title="$t('system.system-settings')"
+      :title="$t('system.preference-settings')"
       direction="rtl"
       size="340px"
       class="system-settings-drawer"
   >
     <div class="settings-body">
-      <!-- 菜单布局 -->
-      <div class="section">
-        <div class="section-title">{{ $t("system.menu-layout") }}</div>
-        <div class="layout-row">
-          <div
-              v-for="opt in menuLayoutOptions"
-              :key="opt.value"
-              class="layout-item"
-              :class="{ 'is-active': settingsStore.menuLayout === opt.value }"
-              @click="settingsStore.menuLayout = opt.value"
-          >
-            <!-- 布局示意图 -->
-            <div class="layout-thumb" :class="'thumb-' + opt.value">
-              <span class="thumb-dark"></span>
-              <span class="thumb-light"></span>
+      <el-tabs v-model="activePreferenceTab" class="settings-tabs" stretch>
+        <el-tab-pane :label="$t('system.framework-layout')" name="frameworkLayout">
+          <div class="settings-panel">
+            <!-- 菜单布局 -->
+            <div class="section">
+              <div class="section-title">{{ $t("system.menu-layout") }}</div>
+              <div class="layout-row">
+                <div
+                    v-for="opt in menuLayoutOptions"
+                    :key="opt.value"
+                    class="layout-item"
+                    :class="{ 'is-active': settingsStore.menuLayout === opt.value }"
+                    @click="settingsStore.menuLayout = opt.value"
+                >
+                  <!-- 布局示意图 -->
+                  <div class="layout-thumb" :class="'thumb-' + opt.value">
+                    <span class="thumb-dark"></span>
+                    <span class="thumb-light"></span>
+                  </div>
+                  <span class="layout-label">{{ $t(opt.labelKey) }}</span>
+                  <!-- 选中标记 -->
+                  <span v-if="settingsStore.menuLayout === opt.value" class="layout-check">
+                    <el-icon><Check/></el-icon>
+                  </span>
+                </div>
+              </div>
             </div>
-            <span class="layout-label">{{ $t(opt.labelKey) }}</span>
-            <!-- 选中标记 -->
-            <span v-if="settingsStore.menuLayout === opt.value" class="layout-check">
-              <el-icon><Check/></el-icon>
-            </span>
+
+            <!-- 界面设置 -->
+            <div class="section">
+              <div class="section-title">{{ $t("system.interface-settings") }}</div>
+              <div class="setting-row">
+                <span class="label">{{ $t("system.menu-folding") }}</span>
+                <el-switch v-model="settingsStore.isCollapse"/>
+              </div>
+              <div
+                  v-for="item in interfaceItems"
+                  :key="item.key"
+                  class="setting-row"
+              >
+                <span class="label">{{ $t(item.labelKey) }}</span>
+                <el-switch v-model="settingsStore[item.key]"/>
+              </div>
+              <!-- 页签风格 / 拖动：标签栏关闭时一并隐藏，避免改了看不见 -->
+              <div v-if="settingsStore.showTabs" class="setting-row">
+                <span class="label">{{ $t("system.tab-style") }}</span>
+                <el-radio-group v-model="settingsStore.tabStyle" size="small">
+                  <el-radio-button
+                      v-for="opt in tabStyleOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                  >
+                    {{ $t(opt.labelKey) }}
+                  </el-radio-button>
+                </el-radio-group>
+              </div>
+              <div v-if="settingsStore.showTabs" class="setting-row">
+                <span class="label">{{ $t("system.tab-drag") }}</span>
+                <el-switch v-model="settingsStore.tabDrag"/>
+              </div>
+            </div>
+
+            <!-- 系统设置 -->
+            <div class="section">
+              <div class="section-title">{{ $t("system.system-settings") }}</div>
+              <div class="setting-row">
+                <span class="label">{{ $t("system.anti-debugging") }}</span>
+                <el-switch v-model="settingsStore.antiDebug"/>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </el-tab-pane>
 
-      <!-- 主题设置 -->
-      <div class="section">
-        <div class="section-title">{{ $t("system.theme-settings") }}</div>
-        <!-- 主题色：实时写 store，store 内 watch 会即时更新全局 --el-color-primary -->
-        <div class="setting-row">
-          <span class="label">{{ $t("system.theme-color") }}</span>
-          <el-color-picker v-model="settingsStore.themeColor" show-alpha/>
-        </div>
-        <!-- 色弱模式：html 加 color-weak class -->
-        <div class="setting-row">
-          <span class="label">{{ $t("system.color-weakness-mode") }}</span>
-          <el-switch v-model="settingsStore.colorWeak"/>
-        </div>
-        <!-- 灰色模式：html 加 grey-mode class -->
-        <div class="setting-row">
-          <span class="label">{{ $t("system.grey-mode") }}</span>
-          <el-switch v-model="settingsStore.greyMode"/>
-        </div>
-        <!-- 侧边栏深色：Aside 切换深色背景 -->
-        <div class="setting-row">
-          <span class="label">{{ $t("system.sidebar-dark") }}</span>
-          <el-switch v-model="settingsStore.sidebarDark"/>
-        </div>
-        <!-- 页面过渡：路由切换动画 -->
-        <div class="setting-row">
-          <span class="label">{{ $t("system.page-transition") }}</span>
-          <el-select
-              v-model="settingsStore.pageTransition"
-              size="small"
-              class="row-select"
-          >
-            <el-option
-                v-for="opt in pageTransitionOptions"
-                :key="opt.value"
-                :value="opt.value"
-                :label="$t(opt.labelKey)"
-            />
-          </el-select>
-        </div>
-      </div>
+        <el-tab-pane :label="$t('system.theme-settings')" name="themeSettings">
+          <div class="settings-panel">
+            <!-- 主题设置 -->
+            <div class="section">
+              <div class="section-title">{{ $t("system.theme-settings") }}</div>
+              <!-- 主题色：实时写 store，store 内 watch 会即时更新全局 --el-color-primary -->
+              <div class="setting-row">
+                <span class="label">{{ $t("system.theme-color") }}</span>
+                <el-color-picker v-model="settingsStore.themeColor" show-alpha/>
+              </div>
+              <!-- 色弱模式：html 加 color-weak class -->
+              <div class="setting-row">
+                <span class="label">{{ $t("system.color-weakness-mode") }}</span>
+                <el-switch v-model="settingsStore.colorWeak"/>
+              </div>
+              <!-- 灰色模式：html 加 grey-mode class -->
+              <div class="setting-row">
+                <span class="label">{{ $t("system.grey-mode") }}</span>
+                <el-switch v-model="settingsStore.greyMode"/>
+              </div>
+              <!-- 侧边栏深色：Aside 切换深色背景 -->
+              <div class="setting-row">
+                <span class="label">{{ $t("system.sidebar-dark") }}</span>
+                <el-switch v-model="settingsStore.sidebarDark"/>
+              </div>
+              <!-- 页面过渡：路由切换动画 -->
+              <div class="setting-row">
+                <span class="label">{{ $t("system.page-transition") }}</span>
+                <el-select
+                    v-model="settingsStore.pageTransition"
+                    size="small"
+                    class="row-select"
+                >
+                  <el-option
+                      v-for="opt in pageTransitionOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                      :label="$t(opt.labelKey)"
+                  />
+                </el-select>
+              </div>
+            </div>
 
-      <!-- 界面设置 -->
-      <div class="section">
-        <div class="section-title">{{ $t("system.interface-settings") }}</div>
-        <div class="setting-row">
-          <span class="label">{{ $t("system.menu-folding") }}</span>
-          <el-switch v-model="settingsStore.isCollapse"/>
-        </div>
-        <div
-            v-for="item in interfaceItems"
-            :key="item.key"
-            class="setting-row"
-        >
-          <span class="label">{{ $t(item.labelKey) }}</span>
-          <el-switch v-model="settingsStore[item.key]"/>
-        </div>
-        <!-- 页签风格 / 拖动：标签栏关闭时一并隐藏，避免改了看不见 -->
-        <div v-if="settingsStore.showTabs" class="setting-row">
-          <span class="label">{{ $t("system.tab-style") }}</span>
-          <el-radio-group v-model="settingsStore.tabStyle" size="small">
-            <el-radio-button
-                v-for="opt in tabStyleOptions"
-                :key="opt.value"
-                :value="opt.value"
-            >
-              {{ $t(opt.labelKey) }}
-            </el-radio-button>
-          </el-radio-group>
-        </div>
-        <div v-if="settingsStore.showTabs" class="setting-row">
-          <span class="label">{{ $t("system.tab-drag") }}</span>
-          <el-switch v-model="settingsStore.tabDrag"/>
-        </div>
-      </div>
+            <!-- 水印设置 -->
+            <div class="section">
+              <div class="section-title">{{ $t("system.watermark-settings") }}</div>
+              <div class="setting-row">
+                <span class="label">{{ $t("system.watermark-color") }}</span>
+                <!--
+                  用 :model-value 单向绑定当前值，@active-change 在拖动/调透明度时实时触发，
+                  直接写 store，无需点 OK 即可实时预览（v-model 只在点确定时更新，不符合实时要求）
+                -->
+                <el-color-picker
+                    :model-value="settingsStore.watermark.color"
+                    show-alpha
+                    @active-change="(c: string | null) => settingsStore.watermark.color = c ?? ''"
+                />
+              </div>
+              <div class="setting-row">
+                <span class="label">{{ $t("system.watermark-text") }}</span>
+                <el-input
+                    v-model="settingsStore.watermark.text"
+                    :placeholder="$t('system.please-enter-something')"
+                    size="small"
+                    class="row-input"
+                    clearable
+                />
+              </div>
+              <div class="setting-row">
+                <span class="label">{{ $t("system.watermark-size") }}</span>
+                <el-slider v-model="settingsStore.watermark.size" :min="10" :max="40" class="row-slider"/>
+              </div>
+              <div class="setting-row">
+                <span class="label">{{ $t("system.watermark-angle") }}</span>
+                <el-slider v-model="settingsStore.watermark.angle" :min="-90" :max="90" class="row-slider"/>
+              </div>
+              <div class="setting-row">
+                <span class="label">{{ $t("system.watermark-gap") }}</span>
+                <el-slider v-model="settingsStore.watermark.gap" :min="0" :max="400" :step="10" class="row-slider"/>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
 
-      <!-- 水印设置 -->
-      <div class="section">
-        <div class="section-title">{{ $t("system.watermark-settings") }}</div>
-        <div class="setting-row">
-          <span class="label">{{ $t("system.watermark-color") }}</span>
-          <!--
-            用 :model-value 单向绑定当前值，@active-change 在拖动/调透明度时实时触发，
-            直接写 store，无需点 OK 即可实时预览（v-model 只在点确定时更新，不符合实时要求）
-          -->
-          <el-color-picker
-              :model-value="settingsStore.watermark.color"
-              show-alpha
-              @active-change="(c: string | null) => settingsStore.watermark.color = c ?? ''"
-          />
-        </div>
-        <div class="setting-row">
-          <span class="label">{{ $t("system.watermark-text") }}</span>
-          <el-input
-              v-model="settingsStore.watermark.text"
-              :placeholder="$t('system.please-enter-something')"
-              size="small"
-              class="row-input"
-              clearable
-          />
-        </div>
-        <div class="setting-row">
-          <span class="label">{{ $t("system.watermark-size") }}</span>
-          <el-slider v-model="settingsStore.watermark.size" :min="10" :max="40" class="row-slider"/>
-        </div>
-        <div class="setting-row">
-          <span class="label">{{ $t("system.watermark-angle") }}</span>
-          <el-slider v-model="settingsStore.watermark.angle" :min="-90" :max="90" class="row-slider"/>
-        </div>
-        <div class="setting-row">
-          <span class="label">{{ $t("system.watermark-gap") }}</span>
-          <el-slider v-model="settingsStore.watermark.gap" :min="0" :max="400" :step="10" class="row-slider"/>
-        </div>
-      </div>
-
-      <!-- 系统设置 -->
-      <div class="section">
-        <div class="section-title">{{ $t("system.system-settings") }}</div>
-        <div class="setting-row">
-          <span class="label">{{ $t("system.anti-debugging") }}</span>
-          <el-switch v-model="settingsStore.antiDebug"/>
-        </div>
-      </div>
+        <el-tab-pane :label="$t('system.theme-style')" name="themeStyle">
+          <div class="settings-panel"></div>
+        </el-tab-pane>
+      </el-tabs>
     </div>
   </el-drawer>
 </template>
@@ -222,15 +237,30 @@ const tabStyleOptions = [
  * 修改这里会影响：各设置分区的纵向排列、分区间距、抽屉内容左右留白。
  */
 .settings-body {
-  /* 各 section 纵向排列 */
-  display: flex;
-  flex-direction: column;
-  /* 每个设置分区之间的距离 */
-  gap: 24px;
   /* 抽屉内容左右微调留白 */
   padding: 0 4px;
 }
 /* ==================== 设置抽屉内容主体结束 ==================== */
+
+/* ==================== 偏好设置 Tab 开始 ====================
+ * 控制位置：偏好设置抽屉顶部的 Tab 栏。
+ * 修改这里会影响：框架布局 / 主题设置 / 主题风格 三个页签的头部间距和内容分区间距。
+ */
+.settings-tabs {
+  :deep(.el-tabs__header) {
+    /* Tab 栏与下方设置内容之间的距离 */
+    margin: 0 0 16px;
+  }
+}
+
+.settings-panel {
+  /* 当前 Tab 内的 section 纵向排列 */
+  display: flex;
+  flex-direction: column;
+  /* 当前 Tab 内各设置分区之间的距离 */
+  gap: 24px;
+}
+/* ==================== 偏好设置 Tab 结束 ==================== */
 
 /* ==================== 设置分区标题开始 ====================
  * 控制位置：每个 .section 内的 .section-title，例如“菜单布局”“主题设置”。

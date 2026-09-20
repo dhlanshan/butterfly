@@ -15,7 +15,7 @@ const userStore = useUserStoreHook();
 const router = useRouter();
 const {t, locale} = useI18n();
 
-// 系统设置抽屉引用：点击 Header 右侧设置图标时调用子组件 open() 打开抽屉
+// 偏好设置抽屉引用：点击 Header 右侧设置图标时调用子组件 open() 打开抽屉
 const systemSettingsRef = ref();
 const openSystemSettings = () => {
     systemSettingsRef.value?.open();
@@ -147,10 +147,10 @@ const handleCommand = async (cmd: string) => {
       />
     </div>
 
-    <!-- 系统设置 -->
+    <!-- 偏好设置 -->
     <div class="action-item" @click="openSystemSettings">
       <el-icon :size="18"><Setting/></el-icon>
-      <el-tooltip :content="$t('system.system-settings')" placement="bottom"/>
+      <el-tooltip :content="$t('system.preference-settings')" placement="bottom"/>
     </div>
 
     <!-- 用户下拉 -->
@@ -178,7 +178,7 @@ const handleCommand = async (cmd: string) => {
     </el-dropdown>
   </div>
 
-  <!-- 系统设置抽屉 -->
+  <!-- 偏好设置抽屉 -->
   <SystemSettings ref="systemSettingsRef"/>
 </template>
 
