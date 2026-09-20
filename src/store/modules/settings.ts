@@ -1,6 +1,7 @@
 import {defineStore} from "pinia";
 import pinia from "@/store";
 import {watch} from "vue";
+import {storageKey} from "@/utils/storage/keys.ts";
 
 /** 触发移动端（自动折叠）的宽度阈值（px） */
 const MOBILE_WIDTH = 768;
@@ -218,7 +219,7 @@ export const useSettingsStore = defineStore("settings", () => {
 }, {
     // 仅持久化手动状态与偏好，isMobile 由窗口实时计算
     persist: {
-        key: "bee-settings",
+        key: storageKey("bee-settings"),
         pick: [
             "isCollapse",
             "isDark",

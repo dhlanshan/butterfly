@@ -1,4 +1,5 @@
 import Cookies from "js-cookie";
+import {cookieKey, storageKey} from "@/utils/storage/keys.ts";
 
 // 类型定义
 export interface AccessTokenData {
@@ -15,9 +16,9 @@ export interface RefreshTokenData {
     refreshTokenExpires: number;
 }
 
-export const AccessTokenKey = "bee-access-token";
-export const RefreshTokenKey = "bee-refresh-token";
-export const UserInfoKey = "bee-user-info";
+export const AccessTokenKey = cookieKey("bee-access-token");
+export const RefreshTokenKey = cookieKey("bee-refresh-token");
+export const UserInfoKey = storageKey("bee-user-info");
 
 export function hasRefreshToken(): boolean {
     return !!Cookies.get(RefreshTokenKey);

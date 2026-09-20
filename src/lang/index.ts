@@ -1,10 +1,13 @@
 import { createI18n } from "vue-i18n";
 import zhCN from "@/lang/modules/zhCN";
 import enUS from "@/lang/modules/enUS";
+import {storageKey} from "@/utils/storage/keys.ts";
+
+const THEME_CONFIG_KEY = storageKey("theme-config");
 
 /* 获取语言 */
 const getLang = () => {
-  let store = localStorage.getItem("theme-config");
+  let store = localStorage.getItem(THEME_CONFIG_KEY);
   if (store) {
     return JSON.parse(store)?.language || "zh-CN";
   } else {

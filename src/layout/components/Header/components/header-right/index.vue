@@ -9,11 +9,13 @@ import {useUserStoreHook} from "@/store/modules/user.ts";
 import Notice from "../Notice/index.vue";
 import SystemSettings from "../system-settings/index.vue";
 import {useI18n} from "vue-i18n";
+import {storageKey} from "@/utils/storage/keys.ts";
 
 const settingsStore = useSettingsStoreHook();
 const userStore = useUserStoreHook();
 const router = useRouter();
 const {t, locale} = useI18n();
+const THEME_CONFIG_KEY = storageKey("theme-config");
 
 // 偏好设置抽屉引用：点击 Header 右侧设置图标时调用子组件 open() 打开抽屉
 const systemSettingsRef = ref();
@@ -51,11 +53,11 @@ const handleLang = (val: string) => {
     currentLang.value = val;
     locale.value = val;
     document.documentElement.lang = val;
-    // 同步持久化到 theme-config（与 lang/index.ts 读取保持一致）
-    const store = localStorage.getItem("theme-config");
+    // 同步持久化到当前项目命名空间下的 theme-config（与 lang/index.ts 读取保持一致）
+    const store = localStorage.getItem(THEME_CONFIG_KEY);
     const cfg = store ? JSON.parse(store) : {};
     cfg.language = val;
-    localStorage.setItem("theme-config", JSON.stringify(cfg));
+    localStorage.setItem(THEME_CONFIG_KEY, JSON.stringify(cfg));
 };
 
 /* ---------- 用户下拉菜单开始 ----------

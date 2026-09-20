@@ -1,6 +1,7 @@
 import {defineStore} from "pinia";
 import pinia from "@/store";
 import type {RouteLocationNormalized} from "vue-router";
+import {storageKey} from "@/utils/storage/keys.ts";
 
 export interface TabItem {
     /** 路由 path，作为唯一标识 */
@@ -128,7 +129,7 @@ export const useTabsStore = defineStore("tabs", {
         },
     },
     persist: {
-        key: "bee-tabs",
+        key: storageKey("bee-tabs"),
         pick: ["tabs", "activePath"],
     },
 });
