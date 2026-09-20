@@ -63,14 +63,9 @@ const getBreadcrumbTargetPath = (item: Menu.MenuOptions): string => {
 const isBreadcrumbChildDisabled = (item: Menu.MenuOptions) =>
     !!item.meta?.disable || !getBreadcrumbTargetPath(item);
 
-const handleBreadcrumbCommand = (path: string) => {
-    if (!path) return;
-    handleMenuSelect(path);
-};
-
 const handleBreadcrumbMenuItemClick = (item: Menu.MenuOptions) => {
     if (hasBreadcrumbDropdown(item) || isBreadcrumbChildDisabled(item)) return;
-    handleBreadcrumbCommand(getBreadcrumbTargetPath(item));
+    handleMenuSelect(getBreadcrumbTargetPath(item));
 };
 
 const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {

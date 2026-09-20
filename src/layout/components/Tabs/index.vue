@@ -931,9 +931,6 @@ watch(activePath, () => scrollActiveIntoView());
  */
 .tab-ops-menu,
 .tab-ctx-menu {
-  --el-dropdown-menuItem-hover-color: var(--el-color-primary);
-  --el-dropdown-menuItem-hover-fill: #409eff1a;
-
   .el-dropdown-menu__item {
     color: var(--el-text-color-regular) !important;
 
