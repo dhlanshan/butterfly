@@ -244,13 +244,79 @@ const tabStyleOptions = [
 
 /* ==================== 偏好设置 Tab 开始 ====================
  * 控制位置：偏好设置抽屉顶部的 Tab 栏。
- * 修改这里会影响：框架布局 / 主题设置 / 主题风格 三个页签的头部间距和内容分区间距。
+ * 修改这里会影响：框架布局 / 主题设置 / 主题风格 三个页签的外观、选中态、hover 态和内容分区间距。
  */
 .settings-tabs {
   :deep(.el-tabs__header) {
     /* Tab 栏与下方设置内容之间的距离 */
-    margin: 0 0 16px;
+    margin: 0 0 18px;
+    /* 去掉 Element Plus 默认 header 外层底边距残留 */
+    border-bottom: 0;
   }
+
+  :deep(.el-tabs__nav-wrap) {
+    /* 分段按钮的浅色背景 */
+    padding: 4px;
+    border-radius: 8px;
+    background-color: var(--el-fill-color-light);
+
+    &::after {
+      /* 去掉 Element Plus 默认底部分隔线 */
+      display: none;
+    }
+  }
+
+  :deep(.el-tabs__nav-scroll) {
+    /* 让三个 Tab 在浅色底中完整铺开 */
+    width: 100%;
+  }
+
+  :deep(.el-tabs__nav) {
+    /* 三个 Tab 横向等分排列 */
+    width: 100%;
+  }
+
+  :deep(.el-tabs__active-bar) {
+    /* 去掉 Element Plus 默认蓝色下划线，改用整块选中态 */
+    display: none;
+  }
+
+  :deep(.el-tabs__item) {
+    /* 单个 Tab 的固定高度 */
+    height: 32px;
+    /* 单个 Tab 的行高，保证文字垂直居中 */
+    line-height: 32px;
+    /* 单个 Tab 圆角 */
+    border-radius: 6px;
+    /* Tab 文字字号 */
+    font-size: 13px;
+    /* Tab 字重 */
+    font-weight: 500;
+    /* 未选中 Tab 文字颜色 */
+    color: var(--el-text-color-regular);
+    /* hover / active 过渡 */
+    transition: color 0.2s, background-color 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      /* 未选中 hover 时文字跟随主色 */
+      color: var(--el-color-primary);
+    }
+
+    &.is-active {
+      /* 选中 Tab 的白色卡片背景 */
+      background-color: var(--el-bg-color);
+      /* 选中 Tab 文字主色 */
+      color: var(--el-color-primary);
+      /* 轻阴影，让选中块从浅色底上浮起 */
+      box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+    }
+  }
+
+  :deep(.el-tabs__content) {
+    /* Tab 内容区域不要额外挤压布局 */
+    overflow: visible;
+  }
+
 }
 
 .settings-panel {
