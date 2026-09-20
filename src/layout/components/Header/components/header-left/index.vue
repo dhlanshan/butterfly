@@ -128,7 +128,7 @@ const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
             :width="'auto'"
             :show-arrow="false"
             :show-after="100"
-            :hide-after="100"
+            :hide-after="200"
         >
           <template #reference>
             <span class="breadcrumb-trigger">
@@ -378,6 +378,20 @@ const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
     border-radius: 4px;
     background-color: var(--el-bg-color-overlay);
     box-shadow: var(--el-box-shadow-light);
+
+    /*
+     * 子菜单 hover 桥接区：
+     * 右侧子菜单和父菜单项之间有 6px 视觉间距。
+     * 如果没有这块透明区域，鼠标横向移动时会短暂离开 :hover，导致子菜单立刻消失。
+     */
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: -6px;
+      width: 6px;
+    }
   }
 }
 /* ==================== 面包屑子菜单弹出层结束 ==================== */
