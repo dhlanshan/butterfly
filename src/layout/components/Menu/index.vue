@@ -355,10 +355,11 @@ const darkColors = {
  * 这块只作用于 .bee-menu-popup 里的内容，不作用于侧边栏展开时的菜单。
  */
 .bee-menu-popup {
-  /* 弹出子菜单卡片本体：控制卡片宽度、距离侧边栏的间距、内边距、圆角、边框、背景、阴影 */
+  /* 弹出子菜单卡片本体：控制卡片自适应宽度、距离侧边栏的间距、内边距、圆角、边框、背景、阴影 */
   .el-menu--popup {
     position: relative;
-    min-width: 168px;
+    width: max-content;
+    min-width: unset;
     margin-left: 8px;
     padding: 3px 6px;
     border-radius: 8px;
@@ -406,17 +407,25 @@ const darkColors = {
     bottom: 20px;
   }
 
-  /* 弹出层菜单项基础尺寸：控制弹出卡片中每一行菜单的高度、内边距、圆角和文字颜色 */
+  /* 弹出层菜单项基础尺寸：下拉框宽度由最宽菜单项决定，每一行再铺满这个统一宽度 */
   .el-menu-item,
   .el-sub-menu__title {
     height: 36px !important;
     line-height: 36px !important;
     margin: 0 !important;
-    width: auto !important;
+    width: 100% !important;
+    min-width: max-content !important;
+    box-sizing: border-box;
     padding: 0 20px !important;
     border-radius: 6px;
     font-weight: 400;
     color: var(--el-text-color-regular);
+    white-space: nowrap;
+  }
+
+  /* 弹出层中带下级的标题：右侧额外留出箭头空间，宽度计算时把箭头位置也算进去 */
+  .el-sub-menu__title {
+    padding-right: 34px !important;
   }
 
   /* 弹出层菜单左侧图标：控制弹出卡片中业务图标的宽度、大小和与文字的距离 */
@@ -425,6 +434,19 @@ const darkColors = {
     width: 18px;
     margin-right: 8px;
     font-size: 20px;
+  }
+
+  /*
+   * 弹出层无图标占位：
+   * - 如果当前这一层弹出菜单里存在任意真实业务图标，占位图标要保留，让所有菜单文字左对齐。
+   * - 只有当前这一层弹出菜单都没有真实业务图标时，才隐藏占位，让宽度按文字和箭头真实宽度计算。
+   * - 只判断当前层的直接菜单项，避免被更深层弹出菜单里的图标影响。
+   */
+  .el-menu--popup:not(:has(> .el-menu-item > .el-icon:not(.is-placeholder):not(.el-sub-menu__icon-arrow))):not(:has(> .el-sub-menu > .el-sub-menu__title > .el-icon:not(.is-placeholder):not(.el-sub-menu__icon-arrow))) {
+    > .el-menu-item > .el-icon.is-placeholder,
+    > .el-sub-menu > .el-sub-menu__title > .el-icon.is-placeholder {
+      display: none;
+    }
   }
 
   /* 弹出层子菜单箭头：控制弹出卡片中有下级菜单时右侧箭头的位置和大小 */

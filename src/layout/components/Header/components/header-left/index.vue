@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Fold, Expand} from "@element-plus/icons-vue";
+import {Fold, Expand, ArrowDown} from "@element-plus/icons-vue";
 import {useSettingsStoreHook} from "@/store/modules/settings.ts";
 import {useRouteConfigStoreHook} from "@/store/modules/route-config.ts";
 import {useRoutingMethod} from "@/hooks/useRoutingMethod.ts";
@@ -149,7 +149,9 @@ const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
               <div class="breadcrumb-menu-item-main">
                 <MenuIcon :svg-icon="child.meta.svgIcon" :icon="child.meta.icon"/>
                 <span>{{ $t(`menu.${child.meta.title}`) }}</span>
-                <span v-if="hasBreadcrumbDropdown(child)" class="breadcrumb-menu-arrow">&gt;</span>
+                <el-icon v-if="hasBreadcrumbDropdown(child)" class="breadcrumb-menu-arrow el-sub-menu__icon-arrow">
+                  <ArrowDown/>
+                </el-icon>
               </div>
 
               <div v-if="hasBreadcrumbDropdown(child)" class="breadcrumb-sub-menu">
@@ -166,7 +168,9 @@ const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
                   <div class="breadcrumb-menu-item-main">
                     <MenuIcon :svg-icon="grandchild.meta.svgIcon" :icon="grandchild.meta.icon"/>
                     <span>{{ $t(`menu.${grandchild.meta.title}`) }}</span>
-                    <span v-if="hasBreadcrumbDropdown(grandchild)" class="breadcrumb-menu-arrow">&gt;</span>
+                    <el-icon v-if="hasBreadcrumbDropdown(grandchild)" class="breadcrumb-menu-arrow el-sub-menu__icon-arrow">
+                      <ArrowDown/>
+                    </el-icon>
                   </div>
                 </div>
               </div>
@@ -292,15 +296,17 @@ const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
 /* ==================== 面包屑子菜单弹出层开始 ====================
  * 控制位置：面包屑父菜单 hover 后 teleport 到 body 的 Element Plus popover。
  * 为什么写非 scoped：el-popover 的 popper 默认挂到 body，scoped 样式无法稳定命中。
- * 修改这里会影响：弹出子菜单的最小宽度、菜单项高度、图标大小、二级展开三级的位置。
+ * 修改这里会影响：弹出子菜单的自适应宽度、菜单项高度、图标大小、二级展开三级的位置。
  */
 .breadcrumb-menu-popper {
   padding: 6px !important;
-  min-width: 168px;
+  width: max-content !important;
+  min-width: unset !important;
 
   .breadcrumb-menu-list,
   .breadcrumb-sub-menu {
-    min-width: 168px;
+    width: max-content;
+    min-width: max-content;
   }
 
   .breadcrumb-menu-item {
@@ -331,8 +337,9 @@ const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
     padding: 0 12px;
     border-radius: 4px;
     font-size: 13px;
+    white-space: nowrap;
 
-    .el-icon {
+    .el-icon:not(.el-sub-menu__icon-arrow) {
       flex-shrink: 0;
       width: 18px;
       margin-right: 8px;
@@ -340,10 +347,24 @@ const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
     }
   }
 
+  /*
+   * 面包屑弹出层无图标占位：
+   * - 当前这一层菜单里存在任意真实业务图标时，占位图标保留，保证每项文字左对齐。
+   * - 当前这一层菜单全部没有真实业务图标时，隐藏占位，让宽度按文字和箭头真实宽度计算。
+   */
+  .breadcrumb-menu-list:not(:has(> .breadcrumb-menu-item > .breadcrumb-menu-item-main > .el-icon:not(.is-placeholder):not(.el-sub-menu__icon-arrow))) > .breadcrumb-menu-item > .breadcrumb-menu-item-main > .el-icon.is-placeholder,
+  .breadcrumb-sub-menu:not(:has(> .breadcrumb-menu-item > .breadcrumb-menu-item-main > .el-icon:not(.is-placeholder):not(.el-sub-menu__icon-arrow))) > .breadcrumb-menu-item > .breadcrumb-menu-item-main > .el-icon.is-placeholder {
+    display: none;
+  }
+
   .breadcrumb-menu-arrow {
-    margin-left: auto;
-    padding-left: 12px;
-    font-size: 12px;
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    margin-left: 8px;
+    margin-right: 0;
+    font-size: 10px;
+    transform: rotate(-90deg);
     color: var(--el-text-color-placeholder);
   }
 
