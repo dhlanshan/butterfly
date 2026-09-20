@@ -36,17 +36,30 @@ useAntiDebug();
 </template>
 
 <style scoped lang="scss">
+/* ==================== 整体布局根容器开始 ====================
+ * 控制位置：整个后台布局最外层 .common-layout。
+ * 修改这里会影响：整个页面是否占满视口、页面级滚动条是否出现在 body 上。
+ */
 .common-layout {
+  /* 让布局高度固定为浏览器视口高度，侧边栏、主内容、Footer 都在这个高度内计算 */
   height: 100vh;
+  /* 禁止 body/外层出现滚动，滚动交给 Main 或侧边栏内部各自处理 */
   overflow: hidden;
 }
+/* ==================== 整体布局根容器结束 ==================== */
 
-/* 外层 el-container 始终撑满 100vh：
-   - side/mix 模式下 Aside 自带 100vh 高度会撑起外层容器；
-   - top 模式无 Aside，外层容器会塌缩成内容高度，导致 Main 的 flex:1 无确定高度可填、
-     Footer 被顶到上方。这里强制外层容器高度 100%，内层纵向容器靠 flex 默认的
-     align-items: stretch 拉伸到等高，Main 即可填满剩余空间把 Footer 压到底部。 */
+/* ==================== Element Plus 外层容器高度开始 ====================
+ * 控制位置：.common-layout 下的第一层 el-container，也就是 Aside + 右侧内容区的横向容器。
+ *
+ * 为什么需要这里：
+ * - side / mix 模式下 Aside 自带 100vh 高度，会自然撑起外层容器。
+ * - top 模式桌面端没有 Aside，外层容器容易塌缩成内容高度。
+ * - 一旦外层容器没有确定高度，Main 的 flex:1 就没有可填充空间，Footer 会被顶到上方。
+ *
+ * 修改这里会影响：右侧 Header、Tabs、Main、Footer 的纵向高度分配。
+ */
 .common-layout > .el-container {
   height: 100%;
 }
+/* ==================== Element Plus 外层容器高度结束 ==================== */
 </style>

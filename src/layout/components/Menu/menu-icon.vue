@@ -50,8 +50,14 @@ const hasIcon = computed(() => useSvg.value || !!epIcon.value);
 </template>
 
 <style scoped lang="scss">
-/* 无图标时仍占位，同级文字才能对齐 */
+/* ==================== 菜单图标占位开始 ====================
+ * 控制位置：MenuIcon 没有 svgIcon、也没有有效 Element Plus icon 时渲染的 el-icon。
+ * 修改这里会影响：无图标菜单项是否仍保留图标宽度。
+ * 目的：即使某些菜单没有配置图标，同级菜单文字也能和有图标的菜单保持左对齐。
+ */
 .is-placeholder {
+  /* 不显示占位图标，但保留它在菜单行里的布局宽度 */
   visibility: hidden;
 }
+/* ==================== 菜单图标占位结束 ==================== */
 </style>

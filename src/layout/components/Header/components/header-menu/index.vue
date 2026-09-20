@@ -83,16 +83,26 @@ const {handleMenuSelect} = useRoutingMethod();
 </template>
 
 <style scoped lang="scss">
-/* 横向菜单：去掉 Element Plus 默认的底部多余间距，贴合 header 高度 */
+/* ==================== Header 横向菜单开始 ====================
+ * 控制位置：Header 中间的横向 el-menu，用于 top / mix 两种菜单布局。
+ * top 模式：渲染完整路由树。
+ * mix 模式：只渲染顶层菜单项。
+ * 修改这里会影响：横向菜单占位宽度、高度、背景、底部边框和图标间距。
+ */
 .header-menu {
+  /* 占据 Header 中间剩余空间，左右分别让给 HeaderLeft / HeaderRight */
   flex: 1;
+  /* 高度贴合 Header 60px */
   height: 100%;
+  /* 去掉 Element Plus horizontal menu 默认底部边框，避免和 Header 边框重叠 */
   border-bottom: none !important;
+  /* 背景透明，使用 Header 的背景色 */
   background-color: transparent;
 
-  /* 横向菜单图标与文字垂直居中，间距与侧边菜单接近 */
+  /* 横向菜单图标：控制图标和文字之间的距离，视觉上接近侧边菜单 */
   :deep(.el-menu-item .el-icon) {
     margin-right: 6px;
   }
 }
+/* ==================== Header 横向菜单结束 ==================== */
 </style>

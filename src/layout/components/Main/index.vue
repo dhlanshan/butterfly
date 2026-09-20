@@ -107,24 +107,52 @@ function createComponentWrapper(component: unknown, route: { fullPath: string; m
 </template>
 
 <style scoped lang="scss">
+/* ==================== 主内容滚动区域开始 ====================
+ * 控制位置：右侧内容区的 <el-main class="main">。
+ * 它位于 Header / Tabs 下方、Footer 上方，用来承载 router-view 页面内容。
+ *
+ * 修改这里会影响：
+ * - 主内容是否占满剩余高度。
+ * - 页面滚动条出现在哪里。
+ * - 主内容背景色。
+ */
 .main {
+  /* 在右侧纵向 el-container 中占满 Header、Tabs、Footer 之外的剩余空间 */
   flex: 1;
+  /* 配合 flex:1 允许内容区在 flex 容器内正确收缩，否则内部滚动可能失效 */
   height: 0;
+  /* 页面内容超出时，只让主内容区滚动，不让整个 body 滚动 */
   overflow: auto;
+  /* 主内容页背景色，跟随 Element Plus 浅色/暗黑主题变量 */
   background-color: var(--el-bg-color-page);
 }
+/* ==================== 主内容滚动区域结束 ==================== */
 
-/* 过渡包裹层：块级、最小高度撑满，避免裸文本页面无根元素导致过渡卡死 */
+/* ==================== 页面过渡包裹层开始 ====================
+ * 控制位置：createComponentWrapper 里给每个路由页面外层包的 .page-transition-wrap。
+ * 修改这里会影响：路由页面切换动画的根节点高度，以及裸文本页面是否能稳定参与 transition。
+ */
 .page-transition-wrap {
+  /* 让路由页面最少撑满主内容高度，避免短页面背景断层 */
   min-height: 100%;
 }
+/* ==================== 页面过渡包裹层结束 ==================== */
 
-/* iframe 内嵌外链：铺满内容区，无边框 */
+/* ==================== iframe 内嵌页面开始 ====================
+ * 控制位置：meta.link + meta.iframe 的路由页面，也就是在主内容区内嵌外部链接时的 iframe。
+ * 修改这里会影响：iframe 是否铺满主内容区、最小高度、边框显示。
+ */
 .iframe-page {
+  /* 横向铺满主内容区 */
   width: 100%;
+  /* 高度继承父级包裹层 */
   height: 100%;
+  /* 兜底最小高度，避免 iframe 在内容很少时高度过低 */
   min-height: calc(100vh - 120px);
+  /* 去掉浏览器默认 iframe 边框 */
   border: 0;
+  /* 块级显示，避免 inline iframe 底部出现基线空隙 */
   display: block;
 }
+/* ==================== iframe 内嵌页面结束 ==================== */
 </style>

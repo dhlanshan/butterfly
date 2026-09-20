@@ -18,7 +18,11 @@ const {tabs, activePath} = storeToRefs(tabsStore);
 const routeStore = useRouteConfigStoreHook();
 const {routeTree} = storeToRefs(routeStore);
 
-/* ---------- 监听路由变化，自动添加标签 ---------- */
+/* ---------- 监听路由变化，自动添加标签开始 ----------
+ * 控制位置：路由切换后自动维护顶部 Tabs。
+ * 排除登录页和错误页，避免这些特殊页面出现在标签栏。
+ * immediate: true 用于首次进入系统时立刻把当前路由加入标签。
+ * ---------- 监听路由变化，自动添加标签结束 ---------- */
 watch(
     () => route.path,
     () => {
@@ -31,17 +35,22 @@ watch(
     {immediate: true}
 );
 
-/* ---------- 路由树就绪后，批量校正所有持久化标签的 meta 快照 ---------- */
-// 路由配置变更（如改 affix）后刷新页面，持久化恢复出的旧标签（含非激活）需按最新 meta 全部刷新。
-// immediate: 处理「Tabs 挂载时 routeTree 已构建好」的情况；routeTree 后续变化（重新初始化）时再触发。
-// deep: false：initSetRouter 是整体重新赋值 routeTree.value（引用变化即触发），无需深监听，避免对大树深比较的开销。
+/* ---------- 持久化标签 meta 校正开始 ----------
+ * 控制位置：刷新页面后从持久化恢复出来的 tabs。
+ * 路由配置变更（例如改 affix / title）后，旧标签需要按最新 routeTree 批量刷新 meta 快照。
+ * immediate: 处理 Tabs 挂载时 routeTree 已经构建好的情况。
+ * deep: false：routeTree 是整体重新赋值，引用变化即可触发，避免大树深比较开销。
+ * ---------- 持久化标签 meta 校正结束 ---------- */
 watch(
     routeTree,
     (tree) => tabsStore.reconcileWithRouteTree(tree),
     {immediate: true, deep: false}
 );
 
-/* ---------- 点击标签跳转 ---------- */
+/* ---------- 点击标签跳转开始 ----------
+ * 控制位置：点击单个 tab-item 时的路由切换。
+ * 拖拽结束后浏览器可能补发一次 click，这里用 skipTabClick / skipTabPath 吞掉拖拽残留点击。
+ * ---------- 点击标签跳转结束 ---------- */
 const handleClick = (tab: any) => {
     // 只吞紧跟拖拽、点在被拖项上的 click（松手残留）；点别的标签要立刻能切
     if (skipTabClick) {
@@ -55,8 +64,12 @@ const handleClick = (tab: any) => {
     }
 };
 
-/* ---------- 页签拖拽换位（仅 settings.tabDrag 开启时） ---------- */
-// 被拖标签相对「当前槽位」移动超过自身一半宽度，就和相邻项换位；换完把槽位原点挪到新位置，可连续换。
+/* ---------- 页签拖拽换位开始 ----------
+ * 启用条件：settingsStore.tabDrag 为 true。
+ * 控制位置：标签栏里 tab-item 的 HTML5 drag 行为。
+ * 换位规则：被拖标签相对“当前槽位”移动超过自身一半宽度，就和相邻项换位。
+ * 换位后把 slotOriginLeft 更新到新槽位，允许一次拖拽连续跨多个标签。
+ * ---------- 页签拖拽换位结束 ---------- */
 const dragFrom = ref(-1);
 // 松手后 :hover 还停在旧槽位；先把悬停钉在落下的标签上，指针真正移动后再交给原生 hover
 const dropHoverIndex = ref(-1);
@@ -162,30 +175,41 @@ const onTabDragEnd = () => {
     window.addEventListener("pointermove", onDropHoverPointerMove);
 };
 
-/* ---------- 关闭标签 ---------- */
+/* ---------- 关闭单个标签开始 ----------
+ * 控制位置：tab-item 右侧关闭按钮。
+ * closeTab 返回下一个应跳转的路径；如果关闭的是当前页，就跳到 store 给出的相邻页。
+ * ---------- 关闭单个标签结束 ---------- */
 const handleClose = (path: string, e: MouseEvent) => {
     e.stopPropagation();
     const next = tabsStore.closeTab(path);
     if (next) router.push(next);
 };
 
-/* ---------- 刷新当前页 ---------- */
-// 通过递增 routeReloadKey 让 Main 里的 :key 变化，强制当前路由组件重挂载（重新加载）。
-// 不再依赖额外的 /redirect 路由，避免跳到不存在的路由导致空白。
+/* ---------- 刷新当前页开始 ----------
+ * 控制位置：标签栏右侧刷新按钮、操作菜单 reload 项。
+ * 通过递增 routeReloadKey 让 Main 里的 :key 变化，强制当前路由组件重挂载。
+ * 不依赖额外 /redirect 路由，避免跳到不存在路由导致空白。
+ * ---------- 刷新当前页结束 ---------- */
 const handleRefresh = () => {
     settingsStore.reloadCurrentRoute();
 };
 
-/* ---------- 内容区全屏 ---------- */
-// 在 html 上切换 content-fullscreen class，由全局 CSS 隐藏侧边栏/Header，
-// 但保留标签栏，让主内容区铺满剩余空间。再次点击退出。
+/* ---------- 内容区全屏开始 ----------
+ * 控制位置：标签操作菜单里的“内容区全屏”。
+ * 在 html 上切换 content-fullscreen class，由全局 CSS 隐藏侧边栏/Header。
+ * 标签栏保留，主内容区铺满剩余空间；再次点击退出。
+ * ---------- 内容区全屏结束 ---------- */
 const isContentFullscreen = ref(false);
 const toggleContentFullscreen = () => {
     isContentFullscreen.value = !isContentFullscreen.value;
     document.documentElement.classList.toggle("content-fullscreen", isContentFullscreen.value);
 };
 
-/* ---------- 标签操作菜单（右侧按钮 / 标签右键共用 opsItems） ---------- */
+/* ---------- 标签操作菜单开始 ----------
+ * 控制位置：右侧“更多”下拉菜单，以及单个标签右键菜单。
+ * opsMenuPath 表示当前菜单针对哪个标签；为空时默认针对 activePath。
+ * ctxVisible / ctxPos / ctxMenuRef 控制右键菜单的显示、位置和边界修正。
+ * ---------- 标签操作菜单结束 ---------- */
 const opsMenuPath = ref<string | null>(null);
 const ctxVisible = ref(false);
 const ctxPos = ref({x: 0, y: 0});
@@ -284,7 +308,11 @@ const handleCommand = (cmd: string) => {
     if (next) router.push(next);
 };
 
-/* ---------- 各操作的可用性（相对当前菜单针对的那一项） ---------- */
+/* ---------- 标签操作可用性开始 ----------
+ * 控制位置：更多菜单和右键菜单中每一项是否 disabled。
+ * 判断基准是 menuPath，也就是“当前菜单针对的标签”，不一定是当前激活标签。
+ * affix 标签不可关闭，因此关闭相关操作都会排除 affix。
+ * ---------- 标签操作可用性结束 ---------- */
 const canCloseCurrent = computed(() => {
     const t = tabs.value[menuIdx.value];
     return !!t && !t.affix;
@@ -316,15 +344,20 @@ const opsItems = computed(() => [
     },
 ]);
 
-/* ---------- 标签标题：通过 routeTree 查找 meta.title ---------- */
+/* ---------- 标签标题解析开始 ----------
+ * 控制位置：tab-item 内展示的标题。
+ * 优先从最新 routeTree 查 meta.title，找不到时回退到 tab 快照里的 title。
+ * ---------- 标签标题解析结束 ---------- */
 const getTitle = (tab: any) => {
     const node = findCategoryById(routeTree.value, "path", tab.path);
     return node?.meta?.title || tab.title;
 };
 
-/* ---------- 标签溢出滚动（左右按钮仅在展示不全时出现） ---------- */
-// 只量滚动容器：scrollWidth / clientWidth / scrollLeft，不对每个标签算位置（O(1)）。
-// ResizeObserver 听容器与内容宽度；scroll 用 passive 更新能否继续滚。卸载时断开，防泄漏。
+/* ---------- 标签溢出滚动开始 ----------
+ * 控制位置：标签过多时左右滚动按钮和滚动容器状态。
+ * 只测量滚动容器 scrollWidth / clientWidth / scrollLeft，不逐个计算标签位置，保持 O(1)。
+ * ResizeObserver 同时监听容器和内部内容宽度；卸载时断开，避免泄漏。
+ * ---------- 标签溢出滚动结束 ---------- */
 const scrollRef = ref<HTMLElement | null>(null);
 const needScroll = ref(false);
 const canScrollLeft = ref(false);
@@ -496,72 +529,132 @@ watch(activePath, () => scrollActiveIntoView());
 </template>
 
 <style scoped lang="scss">
+/* ==================== 标签栏外层容器开始 ====================
+ * 控制位置：右侧布局中 Header 下方的 .tabs-bar。
+ * 内部包含：左滚动按钮、标签滚动区、右滚动按钮、右侧操作按钮。
+ * 修改这里会影响：标签栏高度、背景、底部分隔线、三种 tabStyle 的公共基础样式。
+ */
 .tabs-bar {
+  /* 标签栏内部横向排列 */
   display: flex;
+  /* 标签、滚动按钮、操作按钮垂直居中 */
   align-items: center;
+  /* 标签栏固定高度，会参与 Main 剩余高度计算 */
   height: 40px;
   /* 顶部边框由 Header 提供，这里只保留底部边框，避免双线变粗 */
   border-bottom: 1px solid var(--el-border-color);
+  /* 标签栏背景色，跟随浅色/夜间主题 */
   background-color: var(--el-bg-color);
 
+  /* ==================== 标签左右滚动按钮开始 ====================
+   * 控制位置：标签过多溢出时出现的左/右箭头按钮 .tab-scroll-btn。
+   * 修改这里会影响：滚动按钮宽度、颜色、hover、禁用状态。
+   */
   .tab-scroll-btn {
+    /* 不参与压缩，保证按钮宽度固定 */
     flex-shrink: 0;
+    /* 箭头图标居中 */
     display: flex;
     align-items: center;
     justify-content: center;
+    /* 滚动按钮固定宽度 */
     width: 28px;
+    /* 撑满标签栏高度 */
     height: 100%;
+    /* 鼠标手势提示可点击 */
     cursor: pointer;
+    /* 默认箭头颜色 */
     color: var(--el-text-color-regular);
+    /* hover 颜色和背景过渡 */
     transition: color 0.2s, background-color 0.2s;
 
+    /* 可点击状态 hover：主色箭头 + 浅色背景 */
     &:hover:not(.is-disabled) {
       color: var(--el-color-primary);
       background-color: var(--el-fill-color-light);
     }
 
+    /* 已滚到最左/最右时的禁用状态 */
     &.is-disabled {
       color: var(--el-text-color-disabled);
       cursor: not-allowed;
     }
   }
+  /* ==================== 标签左右滚动按钮结束 ==================== */
 
+  /* ==================== 标签横向滚动容器开始 ====================
+   * 控制位置：包住 TransitionGroup 的 .tabs-scroll。
+   * 修改这里会影响：标签是否横向滚动、原生滚动条是否显示、拖拽 over 事件区域。
+   */
   .tabs-scroll {
+    /* 占据左右滚动按钮和右侧操作区之外的剩余宽度 */
     flex: 1;
+    /* 允许横向滚动 */
     overflow-x: auto;
+    /* 禁止纵向溢出，避免标签栏变高 */
     overflow-y: hidden;
+    /* 撑满标签栏高度 */
     height: 100%;
 
+    /* 隐藏 WebKit 浏览器下的横向滚动条，滚动通过左右按钮或触控板完成 */
     &::-webkit-scrollbar {
       height: 0;
     }
   }
+  /* ==================== 标签横向滚动容器结束 ==================== */
 
+  /* ==================== 标签列表内层开始 ====================
+   * 控制位置：TransitionGroup 渲染出的 .tabs-inner。
+   * 修改这里会影响：所有标签的横向排列、内边距、是否换行。
+   */
   .tabs-inner {
+    /* 标签项横向排列 */
     display: flex;
+    /* 标签项垂直居中 */
     align-items: center;
+    /* 内层高度撑满标签栏 */
     height: 100%;
+    /* 标签列表左右留白 */
     padding: 0 12px;
+    /* 标签标题不换行，保证横向滚动 */
     white-space: nowrap;
   }
+  /* ==================== 标签列表内层结束 ==================== */
 
   /* 换位 FLIP：被挤开的标签平滑滑过去；正在拖的那项立刻落位，不跟拖影抢动画 */
   .tab-flip-move:not(.is-dragging) {
     transition: transform 0.22s ease;
   }
 
+  /* ==================== 单个标签公共样式开始 ====================
+   * 控制位置：每一个 .tab-item。
+   * 这是 smart / card / google 三种风格都会继承的公共基础。
+   * 修改这里会影响：标签默认高度、内边距、标题颜色、关闭按钮显示、激活下划线。
+   */
   .tab-item {
+    /* 给激活下划线、拖拽占位线提供定位上下文 */
     position: relative;
+    /* 标题和关闭按钮横向排列 */
     display: inline-flex;
+    /* 标题和关闭按钮垂直居中 */
     align-items: center;
+    /* smart 风格下标签撑满标签栏高度 */
     height: 100%;
+    /* 标签左右内边距 */
     padding: 0 12px;
+    /* 标签标题字号 */
     font-size: 13px;
+    /* 未激活标签文字颜色 */
     color: var(--el-text-color-secondary);
+    /* 默认透明背景，由不同风格覆盖 */
     background: transparent;
+    /* 默认无边框 */
     border: none;
+    /* smart 风格默认无圆角 */
     border-radius: 0;
+    /* 鼠标手势提示可点击切换 */
     cursor: pointer;
+    /* 文字颜色过渡 */
     transition: color 0.2s;
 
     /* 拖着走时：栏内实体项半透明占位，和旁边实标签、浏览器拖影区分开 */
@@ -581,6 +674,7 @@ watch(activePath, () => scrollActiveIntoView());
       pointer-events: none;
     }
 
+    /* 标签 hover：文字变主色，并显示关闭按钮 */
     &:hover {
       color: var(--el-color-primary);
 
@@ -608,6 +702,7 @@ watch(activePath, () => scrollActiveIntoView());
       }
     }
 
+    /* 标签标题文本：限制最大宽度并超出省略 */
     .tab-title {
       max-width: 140px;
       overflow: hidden;
@@ -616,6 +711,7 @@ watch(activePath, () => scrollActiveIntoView());
       line-height: 1.4;
     }
 
+    /* 标签关闭按钮：默认隐藏，hover 或 active 时显示 */
     .tab-close {
       margin-left: 6px;
       font-size: 12px;
@@ -629,7 +725,12 @@ watch(activePath, () => scrollActiveIntoView());
       }
     }
   }
+  /* ==================== 单个标签公共样式结束 ==================== */
 
+  /* ==================== 拖拽中关闭按钮修正开始 ====================
+   * 控制位置：拖拽标签时所有 tab-item 的关闭按钮显示逻辑。
+   * 目的：避免鼠标还停在旧槽位上时，旧槽位邻居因为 :hover 显示关闭按钮。
+   */
   /* 拖动中：关闭钮跟被拖项走，旧槽位邻居不要因 :hover 再亮出来 */
   &.is-tab-dragging .tab-item {
     &:not(.is-drag-hover):not(.active):hover .tab-close {
@@ -640,7 +741,12 @@ watch(activePath, () => scrollActiveIntoView());
       opacity: 1;
     }
   }
+  /* ==================== 拖拽中关闭按钮修正结束 ==================== */
 
+  /* ==================== 灵动风格拖拽悬浮修正开始 ====================
+   * 控制位置：settingsStore.tabStyle === "smart" 且正在拖拽时的文字颜色。
+   * 目的：旧槽位邻居不要被浏览器残留 hover 改成主题色，只有被拖/落下项保持主色。
+   */
   /* 灵动：邻居不要被停在旧槽位的 :hover 改成主题色；被拖项自己保持悬停字色 */
   &.is-tab-smart.is-tab-dragging .tab-item {
     &:not(.is-drag-hover):not(.active):hover {
@@ -651,26 +757,46 @@ watch(activePath, () => scrollActiveIntoView());
       color: var(--el-color-primary);
     }
   }
+  /* ==================== 灵动风格拖拽悬浮修正结束 ==================== */
 
+  /* ==================== 标签栏右侧操作区开始 ====================
+   * 控制位置：标签栏最右侧 .tabs-actions。
+   * 内部包含：刷新按钮、更多操作下拉按钮。
+   * 修改这里会影响：右侧按钮排列、按钮尺寸、hover 背景。
+   */
   .tabs-actions {
+    /* 操作按钮横向排列 */
     display: flex;
+    /* 操作按钮垂直居中 */
     align-items: center;
+    /* 操作区撑满标签栏高度 */
     height: 100%;
+    /* 操作区左右留白 */
     padding: 0 8px;
 
+    /* 单个操作按钮：刷新、更多菜单 */
     .action-btn {
+      /* 给 tooltip 或未来角标提供定位上下文 */
       position: relative;
+      /* 图标居中 */
       display: flex;
       align-items: center;
       justify-content: center;
+      /* 操作按钮尺寸 */
       width: 32px;
       height: 32px;
+      /* 按钮之间的距离 */
       margin-left: 4px;
+      /* 鼠标手势提示可点击 */
       cursor: pointer;
+      /* 按钮圆角 */
       border-radius: 4px;
+      /* 默认图标颜色 */
       color: var(--el-text-color-regular);
+      /* hover 过渡 */
       transition: all 0.2s;
 
+      /* 操作按钮 hover：主色图标 + 浅填充背景 */
       &:hover {
         color: var(--el-color-primary);
         background-color: var(--el-fill-color-light);
@@ -681,12 +807,18 @@ watch(activePath, () => scrollActiveIntoView());
   /* 卡片 / 谷歌共用选中底色：约 16% 主色叠白（本项目 light-9 混成了 90% 主色，不能直接用） */
   $tab-active-bg: color-mix(in srgb, var(--el-color-primary) 16%, #ffffff);
 
-  /* ---------- 卡片：矮圆角块在栏内垂直居中；未选中浅灰底，选中浅主题色 ---------- */
+  /* ==================== 卡片页签风格开始 ====================
+   * 启用条件：settingsStore.tabStyle === "card"，tabs-bar class 包含 is-tab-card。
+   * 控制效果：标签变成栏内居中的矮圆角块，未选中浅灰底，选中浅主题色。
+   * 修改这里会影响：卡片风格的间距、高度、圆角、背景和激活态。
+   */
   &.is-tab-card {
+    /* 卡片标签之间的间距 */
     .tabs-inner {
       gap: 6px;
     }
 
+    /* 卡片风格单个标签 */
     .tab-item {
       height: 28px;
       border-radius: 6px;
@@ -709,17 +841,24 @@ watch(activePath, () => scrollActiveIntoView());
       }
     }
   }
+  /* ==================== 卡片页签风格结束 ==================== */
 
-  /* ---------- 谷歌：mask-border 切 Chrome 轮廓，底角尖尾在 slice 里不拉伸 ---------- */
+  /* ==================== 谷歌页签风格开始 ====================
+   * 启用条件：settingsStore.tabStyle === "google"，tabs-bar class 包含 is-tab-google。
+   * 控制效果：用 mask-border 切出类似 Chrome 标签页的轮廓。
+   * 修改这里会影响：Chrome 形状、重叠宽度、激活层级、hover 背景、拖拽显示。
+   */
   $chrome-mask: url("data:image/svg+xml,%3Csvg width='68' height='34' viewBox='0 0 68 34' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='m27,0c-7.99582,0 -11.95105,0.00205 -12,12l0,6c0,8.284 -0.48549,16.49691 -8.76949,16.49691l54.37857,-0.11145c-8.284,0 -8.60908,-8.10146 -8.60908,-16.38546l0,-6c0.11145,-12.08445 -4.38441,-12 -12,-12l-13,0z' fill='%23000'/%3E%3C/svg%3E");
 
   &.is-tab-google {
+    /* Google 风格内层：让标签填满高度并给左右重叠留空间 */
     .tabs-inner {
       box-sizing: border-box;
       align-items: stretch;
       padding: 3px 20px 0;
     }
 
+    /* Google 风格单个标签 */
     .tab-item {
       z-index: 1;
       margin: 0 -10px;
@@ -727,6 +866,7 @@ watch(activePath, () => scrollActiveIntoView());
       color: var(--el-text-color-regular);
       -webkit-mask-box-image: $chrome-mask 12 27 15 fill;
 
+      /* Google 风格 hover：提高层级并显示浅色背景 */
       &:hover,
       &.is-drag-hover:not(.active) {
         z-index: 2;
@@ -738,6 +878,7 @@ watch(activePath, () => scrollActiveIntoView());
         opacity: 0.8;
       }
 
+      /* Google 风格激活态：最高层级 + 主色文字 + 浅主题背景 */
       &.active {
         z-index: 3;
         color: var(--el-color-primary);
@@ -756,11 +897,22 @@ watch(activePath, () => scrollActiveIntoView());
       background-color: transparent;
     }
   }
+  /* ==================== 谷歌页签风格结束 ==================== */
 }
+/* ==================== 标签栏外层容器结束 ==================== */
 
+/* ==================== 标签右键菜单开始 ====================
+ * 控制位置：Teleport 到 body 的右键菜单 .tab-ctx-menu。
+ * 这里仍写在 scoped 中，因为 Teleport 节点 class 来自当前模板，Vue 会带上 scoped 属性。
+ * 修改这里会影响：右键菜单定位方式和层级。
+ */
 .tab-ctx-menu {
+  /* 使用 fixed，坐标直接取鼠标在视口中的 clientX/clientY */
   position: fixed;
+  /* 高于 Header、抽屉、普通弹层，确保右键菜单不被遮挡 */
   z-index: 4000;
+  /* 清掉 el-popper 默认 margin，避免坐标偏移 */
   margin: 0;
 }
+/* ==================== 标签右键菜单结束 ==================== */
 </style>
