@@ -68,6 +68,11 @@ const handleBreadcrumbCommand = (path: string) => {
     handleMenuSelect(path);
 };
 
+const handleBreadcrumbMenuItemClick = (item: Menu.MenuOptions) => {
+    if (hasBreadcrumbDropdown(item) || isBreadcrumbChildDisabled(item)) return;
+    handleBreadcrumbCommand(getBreadcrumbTargetPath(item));
+};
+
 const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
     if (hasBreadcrumbDropdown(item)) return undefined;
     if (item.meta.type === 2 && index !== breadcrumbs.value.length - 1) return {path: item.path};
@@ -115,29 +120,59 @@ const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
           :class="{ 'is-current': index === breadcrumbs.length - 1 }"
           :to="getBreadcrumbItemTo(item, index)"
       >
-        <el-dropdown
+        <el-popover
             v-if="hasBreadcrumbDropdown(item)"
             trigger="hover"
+            placement="bottom-start"
             popper-class="breadcrumb-menu-popper"
-            @command="handleBreadcrumbCommand"
+            :width="'auto'"
+            :show-arrow="false"
+            :show-after="100"
+            :hide-after="100"
         >
-          <span class="breadcrumb-trigger">
-            {{ $t(`menu.${item.meta.title}`) }}
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item
-                  v-for="child in getBreadcrumbChildren(item)"
-                  :key="child.path"
-                  :command="getBreadcrumbTargetPath(child)"
-                  :disabled="isBreadcrumbChildDisabled(child)"
-              >
+          <template #reference>
+            <span class="breadcrumb-trigger">
+              {{ $t(`menu.${item.meta.title}`) }}
+            </span>
+          </template>
+          <div class="breadcrumb-menu-list">
+            <div
+                v-for="child in getBreadcrumbChildren(item)"
+                :key="child.path"
+                class="breadcrumb-menu-item"
+                :class="{
+                  'is-disabled': isBreadcrumbChildDisabled(child),
+                  'has-children': hasBreadcrumbDropdown(child)
+                }"
+                @click.stop="handleBreadcrumbMenuItemClick(child)"
+            >
+              <div class="breadcrumb-menu-item-main">
                 <MenuIcon :svg-icon="child.meta.svgIcon" :icon="child.meta.icon"/>
                 <span>{{ $t(`menu.${child.meta.title}`) }}</span>
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+                <span v-if="hasBreadcrumbDropdown(child)" class="breadcrumb-menu-arrow">&gt;</span>
+              </div>
+
+              <div v-if="hasBreadcrumbDropdown(child)" class="breadcrumb-sub-menu">
+                <div
+                    v-for="grandchild in getBreadcrumbChildren(child)"
+                    :key="grandchild.path"
+                    class="breadcrumb-menu-item"
+                    :class="{
+                      'is-disabled': isBreadcrumbChildDisabled(grandchild),
+                      'has-children': hasBreadcrumbDropdown(grandchild)
+                    }"
+                    @click.stop="handleBreadcrumbMenuItemClick(grandchild)"
+              >
+                  <div class="breadcrumb-menu-item-main">
+                    <MenuIcon :svg-icon="grandchild.meta.svgIcon" :icon="grandchild.meta.icon"/>
+                    <span>{{ $t(`menu.${grandchild.meta.title}`) }}</span>
+                    <span v-if="hasBreadcrumbDropdown(grandchild)" class="breadcrumb-menu-arrow">&gt;</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-popover>
         <span v-else>{{ $t(`menu.${item.meta.title}`) }}</span>
       </el-breadcrumb-item>
     </el-breadcrumb>
@@ -255,24 +290,73 @@ const getBreadcrumbItemTo = (item: Menu.MenuOptions, index: number) => {
 
 <style lang="scss">
 /* ==================== 面包屑子菜单弹出层开始 ====================
- * 控制位置：面包屑父菜单 hover 后 teleport 到 body 的 Element Plus dropdown。
- * 为什么写非 scoped：el-dropdown 的 popper 默认挂到 body，scoped 样式无法稳定命中。
- * 修改这里会影响：弹出子菜单的最小宽度、菜单项高度、图标大小、hover 视觉。
+ * 控制位置：面包屑父菜单 hover 后 teleport 到 body 的 Element Plus popover。
+ * 为什么写非 scoped：el-popover 的 popper 默认挂到 body，scoped 样式无法稳定命中。
+ * 修改这里会影响：弹出子菜单的最小宽度、菜单项高度、图标大小、二级展开三级的位置。
  */
 .breadcrumb-menu-popper {
-  .el-dropdown-menu {
+  padding: 6px !important;
+  min-width: 168px;
+
+  .breadcrumb-menu-list,
+  .breadcrumb-sub-menu {
     min-width: 168px;
   }
 
-  .el-dropdown-menu__item {
+  .breadcrumb-menu-item {
+    position: relative;
     height: 34px;
-    line-height: 34px;
+    color: var(--el-text-color-regular);
+    cursor: pointer;
+
+    &.is-disabled {
+      color: var(--el-text-color-disabled);
+      cursor: not-allowed;
+    }
+
+    &:not(.is-disabled):hover > .breadcrumb-menu-item-main {
+      color: var(--el-color-primary);
+      background-color: var(--el-fill-color-light);
+    }
+
+    &.has-children:hover > .breadcrumb-sub-menu {
+      display: block;
+    }
+  }
+
+  .breadcrumb-menu-item-main {
+    display: flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 4px;
+    font-size: 13px;
 
     .el-icon {
+      flex-shrink: 0;
       width: 18px;
       margin-right: 8px;
       font-size: 16px;
     }
+  }
+
+  .breadcrumb-menu-arrow {
+    margin-left: auto;
+    padding-left: 12px;
+    font-size: 12px;
+    color: var(--el-text-color-placeholder);
+  }
+
+  .breadcrumb-sub-menu {
+    display: none;
+    position: absolute;
+    top: -6px;
+    left: calc(100% + 6px);
+    padding: 6px;
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 4px;
+    background-color: var(--el-bg-color-overlay);
+    box-shadow: var(--el-box-shadow-light);
   }
 }
 /* ==================== 面包屑子菜单弹出层结束 ==================== */
