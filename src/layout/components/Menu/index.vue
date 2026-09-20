@@ -361,11 +361,11 @@ const darkColors = {
     width: max-content;
     min-width: unset;
     margin-left: 8px;
-    padding: 3px 6px;
-    border-radius: 8px;
+    padding: 6px;
+    border-radius: 4px;
     border: 1px solid var(--el-border-color-lighter);
     background: var(--el-bg-color-overlay);
-    box-shadow: var(--el-box-shadow);
+    box-shadow: var(--el-box-shadow-light);
 
     /* 弹出卡片小三角基础形状：朝向折叠侧栏图标，before 画边框，after 画背景 */
     &::before,
@@ -410,14 +410,15 @@ const darkColors = {
   /* 弹出层菜单项基础尺寸：下拉框宽度由最宽菜单项决定，每一行再铺满这个统一宽度 */
   .el-menu-item,
   .el-sub-menu__title {
-    height: 36px !important;
-    line-height: 36px !important;
+    height: 34px !important;
+    line-height: 34px !important;
     margin: 0 !important;
     width: 100% !important;
     min-width: max-content !important;
     box-sizing: border-box;
-    padding: 0 20px !important;
-    border-radius: 6px;
+    padding: 0 12px !important;
+    border-radius: 4px;
+    font-size: 13px;
     font-weight: 400;
     color: var(--el-text-color-regular);
     white-space: nowrap;
@@ -425,7 +426,7 @@ const darkColors = {
 
   /* 弹出层中带下级的标题：右侧额外留出箭头空间，宽度计算时把箭头位置也算进去 */
   .el-sub-menu__title {
-    padding-right: 34px !important;
+    padding-right: 30px !important;
   }
 
   /* 弹出层菜单左侧图标：控制弹出卡片中业务图标的宽度、大小和与文字的距离 */
@@ -433,7 +434,7 @@ const darkColors = {
   .el-sub-menu__title .el-icon:not(.el-sub-menu__icon-arrow) {
     width: 18px;
     margin-right: 8px;
-    font-size: 20px;
+    font-size: 16px;
   }
 
   /*
@@ -451,9 +452,10 @@ const darkColors = {
 
   /* 弹出层子菜单箭头：控制弹出卡片中有下级菜单时右侧箭头的位置和大小 */
   .el-sub-menu__icon-arrow {
-    width: 12px;
-    font-size: 12px;
-    margin-top: -6px;
+    width: 10px;
+    height: 10px;
+    font-size: 10px;
+    margin-top: -5px;
     margin-right: 0;
     right: 10px;
   }
