@@ -484,7 +484,13 @@ watch(activePath, () => scrollActiveIntoView());
         <el-icon :size="16"><Refresh/></el-icon>
         <el-tooltip :content="$t('system.refresh')" placement="bottom"/>
       </div>
-      <el-dropdown ref="tabOpsRef" trigger="click" @command="handleCommand" @visible-change="onOpsVisible">
+      <el-dropdown
+          ref="tabOpsRef"
+          trigger="click"
+          popper-class="tab-ops-menu"
+          @command="handleCommand"
+          @visible-change="onOpsVisible"
+      >
         <div class="action-btn" @click="onOpsBtnClick">
           <el-icon :size="16"><IconMenu/></el-icon>
         </div>
@@ -915,4 +921,43 @@ watch(activePath, () => scrollActiveIntoView());
   margin: 0;
 }
 /* ==================== 标签右键菜单结束 ==================== */
+</style>
+
+<style lang="scss">
+/* ==================== 标签操作下拉菜单开始 ====================
+ * 控制位置：标签栏右侧“更多操作”下拉菜单，以及标签右键菜单里的操作项。
+ * 为什么写非 scoped：el-dropdown 的弹层 teleport 到 body 下，scoped 样式无法稳定命中。
+ * 修改这里会影响：菜单项 hover 背景、hover 文字色、图标色、禁用项 hover 状态。
+ */
+.tab-ops-menu,
+.tab-ctx-menu {
+  --el-dropdown-menuItem-hover-color: var(--el-color-primary);
+  --el-dropdown-menuItem-hover-fill: #409eff1a;
+
+  .el-dropdown-menu__item {
+    color: var(--el-text-color-regular) !important;
+
+    .el-icon {
+      color: inherit !important;
+    }
+
+    &:not(.is-disabled):hover,
+    &:not(.is-disabled):focus {
+      color: var(--el-color-primary) !important;
+      background-color: #409eff1a !important;
+    }
+
+    &.is-disabled,
+    &.is-disabled:hover,
+    &.is-disabled:focus,
+    &[aria-disabled="true"],
+    &[aria-disabled="true"]:hover,
+    &[aria-disabled="true"]:focus {
+      color: var(--el-text-color-disabled) !important;
+      background-color: transparent !important;
+      cursor: not-allowed;
+    }
+  }
+}
+/* ==================== 标签操作下拉菜单结束 ==================== */
 </style>
