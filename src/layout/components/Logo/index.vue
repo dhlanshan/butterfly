@@ -41,6 +41,8 @@ const bannerTitle = "JetBrains"
     // column-gap: $padding;
     /* 图标和标题垂直居中 */
     align-items: center;
+    /* 图标和标题作为一组在 Logo 区域内左右居中 */
+    justify-content: center;
     /* 内容行占满 Logo 区域宽度 */
     width: 100%;
     /* Logo 行左右留白；折叠态如需居中可配合 .padding-unset */
