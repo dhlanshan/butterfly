@@ -480,10 +480,11 @@ watch(activePath, () => scrollActiveIntoView());
 
     <!-- 右侧操作区 -->
     <div class="tabs-actions">
-      <div class="action-btn" @click="handleRefresh">
-        <el-icon :size="16"><Refresh/></el-icon>
-        <el-tooltip :content="$t('system.refresh')" placement="bottom"/>
-      </div>
+      <el-tooltip :content="$t('system.refresh')" placement="bottom">
+        <div class="action-btn" @click="handleRefresh">
+          <el-icon :size="16"><Refresh/></el-icon>
+        </div>
+      </el-tooltip>
       <el-dropdown
           ref="tabOpsRef"
           trigger="click"

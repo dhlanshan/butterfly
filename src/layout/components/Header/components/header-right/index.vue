@@ -121,39 +121,42 @@ const handleCommand = async (cmd: string) => {
     </el-dropdown>
 
     <!-- 主题（日/夜）切换 -->
-    <div class="action-item" @click="settingsStore.toggleDark">
-      <el-icon :size="18">
-        <component :is="settingsStore.isDark ? Moon : Sunny"/>
-      </el-icon>
-      <el-tooltip
-          :content="settingsStore.isDark
-            ? $t('system.switch-to-daytime-mode')
-            : $t('system.switch-to-night-mode')"
-          placement="bottom"
-      />
-    </div>
+    <el-tooltip
+        :content="settingsStore.isDark
+          ? $t('system.switch-to-daytime-mode')
+          : $t('system.switch-to-night-mode')"
+        placement="bottom"
+    >
+      <div class="action-item" @click="settingsStore.toggleDark">
+        <el-icon :size="18">
+          <component :is="settingsStore.isDark ? Moon : Sunny"/>
+        </el-icon>
+      </div>
+    </el-tooltip>
 
     <!-- 通知 -->
     <Notice/>
 
     <!-- 全屏 -->
-    <div class="action-item" @click="toggleFullscreen">
-      <el-icon :size="18">
-        <component :is="isFullscreen ? Aim : FullScreen"/>
-      </el-icon>
-      <el-tooltip
-          :content="isFullscreen
-            ? $t('system.exit-full-screen')
-            : $t('system.full-screen')"
-          placement="bottom"
-      />
-    </div>
+    <el-tooltip
+        :content="isFullscreen
+          ? $t('system.exit-full-screen')
+          : $t('system.full-screen')"
+        placement="bottom"
+    >
+      <div class="action-item" @click="toggleFullscreen">
+        <el-icon :size="18">
+          <component :is="isFullscreen ? Aim : FullScreen"/>
+        </el-icon>
+      </div>
+    </el-tooltip>
 
     <!-- 偏好设置 -->
-    <div class="action-item" @click="openSystemSettings">
-      <el-icon :size="18"><Setting/></el-icon>
-      <el-tooltip :content="$t('system.preference-settings')" placement="bottom"/>
-    </div>
+    <el-tooltip :content="$t('system.preference-settings')" placement="bottom">
+      <div class="action-item" @click="openSystemSettings">
+        <el-icon :size="18"><Setting/></el-icon>
+      </div>
+    </el-tooltip>
 
     <!-- 用户下拉 -->
     <el-dropdown trigger="click" @command="handleCommand">

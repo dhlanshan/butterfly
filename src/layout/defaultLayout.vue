@@ -25,7 +25,7 @@ useAntiDebug();
       <Aside v-if="settingsStore.menuLayout !== 'top' || settingsStore.isMobile"/>
       <el-container direction="vertical">
         <Header />
-        <Tabs v-show="settingsStore.showTabs"/>
+        <Tabs v-if="settingsStore.showTabs"/>
         <Main />
         <Footer v-show="settingsStore.showFooter"/>
       </el-container>

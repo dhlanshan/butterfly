@@ -1,4 +1,4 @@
-import {http} from "@/utils/http"
+import {http} from "@/utils/http/index.ts"
 import type {Response} from "@/api/basic.ts";
 
 export interface MenuItem {
@@ -34,5 +34,13 @@ export type getRoutersResp = Response<MenuItem[]>;
 
 // 获取当前用户有权限的菜单数据不含按钮
 export const getRoutersAPI = () => {
-    return http.request<getRoutersResp>("get", "/sysMenu/routers");
+    return http.request<getRoutersResp>({
+        Url: "/sysMenu/routers",
+        Method: "GET",
+        Retry: 2,
+        RetryInterval: 1,
+        Timeout: 10,
+        EchoReq: true,
+        EchoRes: true,
+    })
 };
